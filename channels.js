@@ -50,14 +50,19 @@ window.SMM_CHANNELS = [
   { name: "Mister Rogers' Neighborhood", id: 'UCQr37RLNViAkEwli9WiaUug' },
   // PBS KIDS' full episodes and compilations playlist
   { name: "Daniel Tiger's Neighborhood", list: 'PLa8HWWMcQEGT8bMsS9WSyXbvbxm5i8bUW' },
-  // Arthur's channel list won't load in the TV player, so these are its official full-episode videos picked
-  // one by one: three hour-long sets from the Arthur channel (GBH) and one episode from PBS KIDS
+  // Most official Arthur videos are blocked from playing outside YouTube. These PBS KIDS full episodes
+  // (from the "Arthur FULL Episodes" playlist Josh found) were each tested and do play here.
   { name: 'Arthur', ids: [
-    'hTwipCruUpY',   // 1 Hour Of Arthur | Arthur Full Episodes
-    'SpnQDPsaK54',   // Arthur Full Episodes (about an hour)
-    'H2Qf-mUklnw',   // Arthur Full Episodes (about an hour)
-    'WJQJQrbsuIE',   // Arthur full episode, PBS KIDS
-    'J6Pyoi2mN1c'    // Arthur's First Sleepover / Arthur's New Year's Eve, PBS KIDS
+    'mpsu-YYGdeU',   // Silent Treatment
+    'QpYHnyO4-_U',   // Through the Looking Glasses
+    '4ETDmav5CmQ',   // Muffy Misses Out
+    '2JMYazJC5ys',   // Cents-less
+    'Xjriy-iizbw',   // The Princess Problem
+    'SSA6LFLXtgE',   // S.W.E.A.T.
+    'ZwO5_ZnqXxY',   // Arthur's Numbers Nightmare
+    'yFKxJVOc81o',   // What's in a Name?
+    'nuaq888PtM4',   // Best Enemies
+    'A7FFCnmiZdI'    // Brain Gets Hooked
   ] },
   // Disney Kids' own "The New Adventures of Winnie the Pooh" playlist
   { name: 'Winnie the Pooh', list: 'PLWMhB1nOHzvs' },

@@ -346,7 +346,7 @@ const CHANNELS = (window.SMM_CHANNELS || []).filter((c) => c && c.name && (c.id 
 const PAINT = ['red', 'yellow', 'blue', 'green'];
 const paintOf = (i) => { const c = CHANNELS[i] && CHANNELS[i].color; return PAINT.indexOf(c) >= 0 ? c : PAINT[i % PAINT.length]; };
 const MIN_LEN = 60;         // skip clips under a minute (hand-picked "ids" channels play everything)
-const MAX_TRIES = 10;       // videos to try before calling a channel off the air
+const MAX_TRIES = 20;       // videos to try before calling a channel off the air (a blocked video fails in about a second)
 const LOCAL = location.protocol === 'file:' || location.origin === 'null';   // opened as a saved file: YouTube refuses to play here
 const NEED_LINK = ['Open Saturday Morning Mode from its web link', 'YouTube won\'t play videos in a page opened from a saved file or a preview. Open the web address in a browser instead.'];
 const NO_YT = ['Can\'t reach YouTube', 'Check the internet connection, then reload.'];
@@ -710,6 +710,7 @@ async function tune(i, quiet) {
   const ids = await idsFor(ch);
   if (my !== token) return;
   if (!ids.length) { unavailable(ch); return; }
+  if (ids.every((v) => bad.has(v))) { smmLog('every video on ' + ch.name + ' is blocked here'); unavailable(ch); return; }   // no point trying them all again
   prog = { seq: 0, tries: 0, token: my, live: true };
   play(ch, ids, true);
 }

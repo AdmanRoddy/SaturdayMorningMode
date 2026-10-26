@@ -46,6 +46,7 @@ It starts with `UC`.
 | ▶ | Start the show over |
 | Play/Pause | Pause |
 | Number keys | Go straight to a channel |
+| Green | Marshmallows! (same as the marshmallow button on the banner) |
 | Back | Close the guide (in the Samsung app: back to the Bent Steering home screen) |
 
 On a phone or tablet: swipe up or down to change channel, tap for the buttons.

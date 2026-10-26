@@ -140,6 +140,11 @@ body.guiding .bug{opacity:0} /* the guide has its own */
 .ch-btns button.wide{width:auto;padding:0 1.4rem;border-radius:2.4rem;font-size:1.55rem;font-weight:700}
 .ch-btns button:active{transform:translate(.2rem,.2rem);box-shadow:.05rem .05rem 0 var(--ink)}
 .ch-btns svg{width:1.9rem;height:1.9rem}
+#btn-mallow svg{width:2.5rem;height:2.5rem}
+/* marshmallows: tossed from the top, bounce on the banner, then poof */
+.mallow{position:fixed;left:0;top:0;z-index:6;width:5.6rem;height:5.6rem;pointer-events:none;will-change:transform,opacity}
+.mallow svg{display:block;width:100%;height:100%}
+.hint .key.green{background:var(--green)}
 #btn-pause .i-play{display:none}
 #btn-pause.paused .i-play{display:block}
 #btn-pause.paused .i-pause{display:none}
@@ -295,9 +300,10 @@ body.touch .hint{display:none}
     <button id="btn-restart" class="wide p-red">Start over</button>
     <button id="btn-guide" class="wide p-yellow">Guide</button>
     <button id="btn-sound" class="wide p-green">Mute</button>
+    <button id="btn-mallow" class="p-white" aria-label="Marshmallows"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M12 24v18a20 8 0 0 0 40 0V24" fill="#FF8FBF" stroke="#1D1230" stroke-width="5" stroke-linejoin="round"/><ellipse cx="32" cy="24" rx="20" ry="8" fill="#FFC2DD" stroke="#1D1230" stroke-width="5"/><ellipse cx="25" cy="22.5" rx="6" ry="2" fill="#fff" opacity=".8"/></svg></button>
   </div>
 </section>
-<div class="hint hide" id="hint"><span class="key">▲ ▼</span>Channels<span class="key">OK</span>Guide<span class="key">◀</span>Last channel<span class="key">▶</span>Start over</div>
+<div class="hint hide" id="hint"><span class="key">▲ ▼</span>Channels<span class="key">OK</span>Guide<span class="key">◀</span>Last channel<span class="key">▶</span>Start over<span class="key green">●</span>Marshmallows</div>
 
 <aside class="guide" id="guide" aria-label="Channel guide">
   <div class="confetti"></div>
@@ -1183,7 +1189,8 @@ window.addEventListener('keydown', (e) => {
   else if (k === 'MediaRewind' || code === 227) { if (player && player.seekTo) { player.seekTo(Math.max(0, player.getCurrentTime() - 30), true); showBanner(); } }
   else if (k === 'm') toggleSound();
   else if (k === 'c' || k === 'Caption' || k === 'ColorF0Red') toggleCaptions();
-  else if (k === 'z' || k === 'ColorF1Green' || k === 'PictureSize') toggleFill();
+  else if (k === 'ColorF1Green' || k === 'g') dropMallows();
+  else if (k === 'z' || k === 'PictureSize') toggleFill();
   else if (/^[0-9]$/.test(k)) typeNumber(k);
   else return;
   e.preventDefault();
@@ -1210,6 +1217,68 @@ els.pause.addEventListener('click', togglePause);
 $('btn-restart').addEventListener('click', restart);
 $('btn-guide').addEventListener('click', () => (guideOpen ? closeGuide() : openGuide()));
 els.sound.addEventListener('click', toggleSound);
+$('btn-mallow').addEventListener('click', dropMallows);
+
+/* ---------- marshmallows ---------- */
+// A handful of puffy marshmallows tumble down, bounce on the banner (or the bottom of the screen), sit for a
+// moment and poof away. Drawn and moved only while some are on screen.
+const MALLOW_PAINT = [['#FF8FBF', '#FFC2DD'], ['#FFD54F', '#FFEBA3'], ['#7FDCA4', '#C3F2D4'], ['#FFA45C', '#FFD0A8'], ['#7CC4FF', '#C3E4FF'], ['#B794FF', '#DCCBFF']];
+const mallows = [];
+let mallowRaf = 0, mallowLast = 0;
+const mallowSvg = (c) => '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M12 24v18a20 8 0 0 0 40 0V24" fill="' + c[0] + '" stroke="#1D1230" stroke-width="4" stroke-linejoin="round"/>'
+  + '<ellipse cx="32" cy="24" rx="20" ry="8" fill="' + c[1] + '" stroke="#1D1230" stroke-width="4"/><ellipse cx="25" cy="22.5" rx="6" ry="2" fill="#fff" opacity=".8"/></svg>';
+function dropMallows() {
+  showBanner();
+  const W = window.innerWidth, H = window.innerHeight, now = performance.now();
+  const size = parseFloat(getComputedStyle(document.documentElement).fontSize) * 5.6;
+  const n = 5 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < n && mallows.length < 24; i++) {
+    const el = document.createElement('div');
+    el.className = 'mallow';
+    el.innerHTML = mallowSvg(MALLOW_PAINT[Math.floor(Math.random() * MALLOW_PAINT.length)]);
+    el.style.transform = 'translate(-999px,-999px)';
+    document.body.appendChild(el);
+    mallows.push({ el: el, size: size, x: size * 0.2 + Math.random() * (W - size * 1.4), y: -size - Math.random() * H * 0.45,
+      vx: (Math.random() - 0.5) * 90, vy: Math.random() * 120, r: Math.random() * 360, vr: (Math.random() - 0.5) * 300,
+      bounces: 0, born: now, landed: 0, gone: 0 });
+  }
+  if (!mallowRaf) { mallowLast = 0; mallowRaf = requestAnimationFrame(stepMallows); }
+}
+function mallowFloor(m) {
+  const b = els.banner;
+  if (!b.classList.contains('hide')) {
+    const r = b.getBoundingClientRect(), mid = m.x + m.size / 2;
+    if (mid > r.left && mid < r.right) return r.top;
+  }
+  return window.innerHeight;
+}
+function stepMallows(t) {
+  const dt = mallowLast ? Math.min(0.05, (t - mallowLast) / 1000) : 0.016;
+  mallowLast = t;
+  const G = window.innerHeight * 2.4;
+  for (let i = mallows.length - 1; i >= 0; i--) {
+    const m = mallows[i];
+    if (!m.gone) {
+      m.vy += G * dt; m.x += m.vx * dt; m.y += m.vy * dt; m.r += m.vr * dt;
+      const floor = mallowFloor(m) - m.size * 0.78;     // sits on the banner's edge
+      if (m.y >= floor) {
+        m.y = floor; m.vx *= 0.8;
+        if (m.vy > 140 && m.bounces < 3) { m.vy = -m.vy * 0.42; m.vr *= 0.6; m.bounces++; }
+        else { m.vy = 0; m.vr = 0; m.r += (Math.round(m.r / 360) * 360 - m.r) * 0.2; if (!m.landed) m.landed = t; }   // settle upright
+      }
+      if ((m.landed && t - m.landed > 1100) || t - m.born > 6000) m.gone = t;
+    }
+    let fade = 1, grow = 1;
+    if (m.gone) {
+      const k = Math.min(1, (t - m.gone) / 320);
+      fade = 1 - k; grow = 1 + 0.4 * k;
+      if (k >= 1) { m.el.parentNode.removeChild(m.el); mallows.splice(i, 1); continue; }
+    }
+    m.el.style.transform = 'translate(' + m.x.toFixed(1) + 'px,' + m.y.toFixed(1) + 'px) rotate(' + m.r.toFixed(1) + 'deg) scale(' + grow + ')';
+    m.el.style.opacity = fade;
+  }
+  mallowRaf = mallows.length ? requestAnimationFrame(stepMallows) : 0;
+}
 
 renderGuide();
 const s = document.createElement('script');

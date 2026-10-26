@@ -553,13 +553,17 @@ function markBad(v) { if (!v) return; bad.add(v); store.set('bad', [...bad].slic
 
 function cueList(list, wait) {
   // Ask the player for a playlist; it hands back the video ids it can see. Only trust the answer once
-  // the player says it holds this exact list (a failed load can leave the previous list behind).
+  // the player holds a new list (a failed load can leave the previous list behind). YouTube may report a
+  // short playlist id (like the ones the YouTube app shares) under its long form, so a list counts as
+  // loaded when the player names this list, or any list other than the one it held before.
+  const before = player.getPlaylistId ? player.getPlaylistId() : null;
   return new Promise((resolve) => {
     const t0 = Date.now(), limit = wait || 9000;
     let done = false, poll = 0;
-    const finish = (ids) => { if (done) return; done = true; clearInterval(poll); cueWaiter = null; smmLog('list ' + list + ': ' + ids.length + ' videos'); resolve(ids); };
+    const finish = (ids) => { if (done) return; done = true; clearInterval(poll); cueWaiter = null; smmLog('list ' + list + ': ' + ids.length + ' videos' + (player.getPlaylistId && player.getPlaylistId() !== list ? ' (YouTube calls it ' + player.getPlaylistId() + ')' : '')); resolve(ids); };
     poll = setInterval(() => {
-      const same = !player.getPlaylistId || player.getPlaylistId() === list;
+      const now = player.getPlaylistId ? player.getPlaylistId() : null;
+      const same = !player.getPlaylistId || now === list || (!!now && now !== before);
       const ids = same && player.getPlaylist ? (player.getPlaylist() || []) : [];
       const waited = Date.now() - t0;
       if (ids.length) finish(ids);

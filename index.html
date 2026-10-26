@@ -649,12 +649,15 @@ function adBreak(on, now) {
     if (CHANNELS[chIndex].slate === 'dvd') dvdSlate(true); else els.ad.classList.add('on');
     hushAd(true);
     if (musicOn) Lofi.start();
+    // something is playing, so Safari isn't waiting for a tap: every tap goes to the app (and the banner)
+    if (document.body.classList.contains('tapyt')) { document.body.classList.remove('tapyt'); document.body.classList.remove('tapgo'); unlocked = true; }
     adFailsafe = setTimeout(() => { dbg('cover up 90 s: taking it down'); adBreak(false, true); }, 90000);   // never leave the slate stuck up
   } else {
     if (prog && prog.token === token && !prog.seeked) els.stat.classList.add('on');   // show starts behind the tuning screen
     els.ad.classList.remove('on'); dvdSlate(false);
     Lofi.stop();
     hushAd(false);
+    if (IOS && prog && prog.token === token) checkStarted(4000);
   }
 }
 // Mute the ad. YouTube's ad player can come up with its own sound on, so the mute is repeated while the ad
@@ -870,17 +873,22 @@ function play(ch, ids, live) {
   player.loadVideoById({ videoId: vid });
   if (muted) player.mute(); else player.unMute();
   dbg('load ' + ch.name + ' ' + vid);
-  if (IOS) {
-    const my = prog.token, v = vid;
-    setTimeout(() => {
-      if (!prog || prog.token !== my || prog.vid !== v || !player || !player.getPlayerState) return;
-      const st = player.getPlayerState();
-      if (st !== YT.PlayerState.PLAYING && st !== YT.PlayerState.BUFFERING) needTap();
-    }, unlocked ? 6000 : 3500);
-  }
+  if (IOS) checkStarted(unlocked ? 6000 : 3500);
+}
+// iPad/iPhone: if the show still hasn't started a few seconds after loading, Safari is waiting for a tap on
+// YouTube's own player. A commercial counts as started: YouTube reports the show as not started while its ad
+// plays, and handing taps to the player then would send a kid's taps to the ad instead of the banner.
+function checkStarted(ms) {
+  const my = prog && prog.token, v = prog && prog.vid;
+  setTimeout(() => {
+    if (!prog || prog.token !== my || prog.vid !== v || !player || !player.getPlayerState || adOn) return;
+    const st = player.getPlayerState();
+    if (st !== YT.PlayerState.PLAYING && st !== YT.PlayerState.BUFFERING) needTap();
+  }, ms);
 }
 // Safari wouldn't start the video: show YouTube's own player and let the next tap land on it.
 function needTap() {
+  if (adOn) return;                            // a commercial is playing, so the player isn't stuck
   if (document.body.classList.contains('tapyt')) { document.body.classList.remove('tapgo'); return; }
   dbg('needs a tap on the player');
   unlocked = false;

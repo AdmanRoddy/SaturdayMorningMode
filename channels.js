@@ -74,6 +74,7 @@ window.SMM_CHANNELS = [
     'Vh-Sa1RlRfA',   // Air Bud: Seventh Inning Fetch
     'YazStuuIpOM',   // Air Bud: Spikes Back
     'jEUJgZOsDes',   // Air Buddies
-    'rWG0bi0AQYA'    // MVP: Most Valuable Primate
+    'rWG0bi0AQYA',   // MVP: Most Valuable Primate
+    'iT-ozlJGiE0'    // It's the Great Pumpkin, Charlie Brown (a fan's upload, so it may disappear someday)
   ] }
 ];

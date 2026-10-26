@@ -208,6 +208,17 @@ body.touch .hint{display:none}
 .ab-ch{margin-top:2rem;font-size:2rem;font-weight:700}
 .ab-note{position:absolute;left:0;right:0;bottom:2.4rem;margin:0;padding:0 2rem;text-align:center;font-size:1.3rem;font-weight:500;color:rgba(255,255,255,.78)}
 
+/* ---------- the DVD-player slate: "Saturday Morning" drifts around a black screen, new paint on every bounce ---------- */
+.dvd{position:fixed;top:0;right:0;bottom:0;left:0;z-index:4;background:#000;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .3s ease}
+.dvd.on{opacity:1}
+.dvd-mover{position:absolute;left:0;top:0;padding:.35em .45em .45em .3em;font-size:4.4rem;will-change:transform}
+.dvd .w{transition:background-color .15s ease, color .15s ease}
+.dvd .w:first-child{transform:rotate(-3deg)}
+.dvd .w:last-child{margin:-.1em 0 0 .5em;transform:rotate(2deg)}
+.dvd .w.p-red,.dvd .w.p-blue{text-shadow:.045em .045em 0 var(--ink)}
+.dvd .logo.corner{animation:corner .9s cubic-bezier(.3,1.6,.5,1)}
+@keyframes corner{0%{transform:scale(1)}30%{transform:scale(1.25) rotate(-6deg)}60%{transform:scale(.95) rotate(4deg)}100%{transform:none}}
+
 /* ---------- phones held upright ---------- */
 @media (max-aspect-ratio:1/1){
   .bug{font-size:1.4rem;right:1rem;top:1rem}
@@ -252,6 +263,9 @@ body.touch .hint{display:none}
     <div class="ab-ch" id="ab-ch"></div>
   </div>
   <p class="ab-note">No commercial breaks with YouTube Premium: sign in at youtube.com in this browser.</p>
+</div>
+<div class="dvd" id="dvd" aria-hidden="true">
+  <div class="dvd-mover" id="dvd-mover"><div class="logo" id="dvd-logo"><span class="w p-red" id="dvd-w1">Saturday</span><span class="w p-yellow" id="dvd-w2">Morning</span></div></div>
 </div>
 
 <section class="banner hide" id="banner" aria-live="polite">
@@ -599,14 +613,48 @@ function adBreak(on, now) {
     els.abCh.textContent = 'Back to channel ' + (chIndex + 1) + ', ' + CHANNELS[chIndex].name + ', in a moment';
     els.stat.classList.remove('on');           // the slate replaces the tuning screen
     clearTimeout(bannerTimer); els.banner.classList.add('hide'); els.hint.classList.add('hide'); document.body.classList.remove('ui');   // the slate has the screen to itself
-    els.ad.classList.add('on');
+    if (CHANNELS[chIndex].slate === 'dvd') dvdSlate(true); else els.ad.classList.add('on');
     if (player && player.mute) player.mute();
     adFailsafe = setTimeout(() => { dbg('cover up 90 s: taking it down'); adBreak(false, true); }, 90000);   // never leave the slate stuck up
   } else {
     if (prog && prog.token === token && !prog.seeked) els.stat.classList.add('on');   // show starts behind the tuning screen
-    els.ad.classList.remove('on');
+    els.ad.classList.remove('on'); dvdSlate(false);
     if (player && player.unMute && !muted) player.unMute();
   }
+}
+// The DVD-player slate (a channel with slate: 'dvd'): the logo drifts corner to corner, takes new
+// Harlequin paint every time it bounces, and does a little dance when it lands square in a corner.
+const DVD_PAINT = [['red', 'yellow'], ['blue', 'green'], ['yellow', 'red'], ['green', 'blue'], ['red', 'green'], ['blue', 'yellow'], ['green', 'red'], ['yellow', 'blue']];
+const dvd = { el: $('dvd'), mover: $('dvd-mover'), logo: $('dvd-logo'), w1: $('dvd-w1'), w2: $('dvd-w2'), on: false, x: 0, y: 0, vx: 1, vy: 1, raf: 0, last: 0, paint: 0 };
+function dvdRepaint() {
+  dvd.paint = (dvd.paint + 1) % DVD_PAINT.length;
+  dvd.w1.className = 'w p-' + DVD_PAINT[dvd.paint][0];
+  dvd.w2.className = 'w p-' + DVD_PAINT[dvd.paint][1];
+}
+function dvdStep(t) {
+  if (!dvd.on) return;
+  const dt = dvd.last ? Math.min(0.05, (t - dvd.last) / 1000) : 0; dvd.last = t;
+  const W = window.innerWidth, H = window.innerHeight, w = dvd.mover.offsetWidth, h = dvd.mover.offsetHeight;
+  const speed = Math.max(W, H) * 0.1;          // about ten seconds to cross a TV
+  dvd.x += dvd.vx * speed * dt; dvd.y += dvd.vy * speed * 0.8 * dt;
+  let hitX = false, hitY = false;
+  if (dvd.x <= 0) { dvd.x = 0; dvd.vx = 1; hitX = true; } else if (dvd.x >= W - w) { dvd.x = Math.max(0, W - w); dvd.vx = -1; hitX = true; }
+  if (dvd.y <= 0) { dvd.y = 0; dvd.vy = 1; hitY = true; } else if (dvd.y >= H - h) { dvd.y = Math.max(0, H - h); dvd.vy = -1; hitY = true; }
+  if (hitX || hitY) dvdRepaint();
+  if (hitX && hitY) { dvd.logo.classList.remove('corner'); void dvd.logo.offsetWidth; dvd.logo.classList.add('corner'); dbg('dvd: corner!'); }
+  dvd.mover.style.transform = 'translate(' + Math.round(dvd.x) + 'px,' + Math.round(dvd.y) + 'px)';
+  dvd.raf = requestAnimationFrame(dvdStep);
+}
+function dvdSlate(on) {
+  if (on === dvd.on) return;
+  dvd.on = on;
+  dvd.el.classList.toggle('on', on);
+  cancelAnimationFrame(dvd.raf);
+  if (!on) return;
+  dvd.x = Math.random() * Math.max(0, window.innerWidth - dvd.mover.offsetWidth);
+  dvd.y = Math.random() * Math.max(0, window.innerHeight - dvd.mover.offsetHeight);
+  dvd.vx = Math.random() < 0.5 ? -1 : 1; dvd.vy = Math.random() < 0.5 ? -1 : 1; dvd.last = 0;
+  dvd.raf = requestAnimationFrame(dvdStep);
 }
 
 /* ---------- tuning ---------- */

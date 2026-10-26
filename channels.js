@@ -11,6 +11,7 @@
  * Optional on any channel:
  *   min: 120          skip videos shorter than this many seconds (default 60)
  *   color: 'yellow'   the channel's panel color: 'red', 'yellow', 'blue' or 'green' (default: takes turns)
+ *   slate: 'dvd'      commercial breaks show "Saturday Morning" bouncing around a black screen like an old DVD player
  *
  * To find a creator's id: on their YouTube channel page, open "About" (the "more" link under the name),
  * then Share channel > Copy channel ID. It starts with UC.

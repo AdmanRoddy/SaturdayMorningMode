@@ -16,9 +16,10 @@
  * To find a creator's id: on their YouTube channel page, open "About" (the "more" link under the name),
  * then Share channel > Copy channel ID. It starts with UC.
  *
- * Every source below is the show's official channel, or a playlist on a channel run by the studio or its
- * licensed distributor. Bear in the Big Blue House and Wishbone have no official episodes on YouTube, and
- * classic Blue's Clues (Steve and Joe) isn't there either, so the 2019 Blue's Clues & You! stands in.
+ * Sources are the show's official channel, or a playlist on a channel run by the studio or its licensed
+ * distributor, except Bear in the Big Blue House and Wishbone: nothing official exists, so those two are
+ * fan-made playlists and can lose videos over time. Classic Blue's Clues (Steve and Joe) isn't on YouTube
+ * officially, so the 2019 Blue's Clues & You! stands in.
  */
 window.SMM_CHANNELS = [
   { name: 'Sesame Street', id: 'UCoookXUzPciGrEZEXmh4Jjg' },
@@ -30,6 +31,8 @@ window.SMM_CHANNELS = [
   // on Little Boat (Boat Rocker's kids shows)
   { name: 'The Big Comfy Couch', list: 'PLsrHA2p9h-Bif_bYyyBTjl6Dke2MXbg-p' },
   { name: 'Little Bear', id: 'UCncFzSeWqySvOXEbQoEJsZg' },
+  // fan-made "Complete Seasons 1-5" playlist (Play Breakz): Disney hasn't posted the show
+  { name: 'Bear in the Big Blue House', list: 'PLAVu1r3_Gd-4' },
   // classic LeVar Burton episodes, on Sony's Kidzuko channel
   { name: 'Reading Rainbow', list: 'PLKjPuuAb_XK9LvO36b0xCCfnh8F8Dy3Rx' },
   // Scholastic's "Magic School Bus Classic" channel: the original 1994–97 series
@@ -38,6 +41,8 @@ window.SMM_CHANNELS = [
   { name: "Blue's Clues & You!", id: 'UCjZo1E1P6wDDyw6ImVgKM-A' },
   // Scholastic's classic 2000–03 series, plus Clifford's Puppy Days
   { name: 'Clifford the Big Red Dog', id: 'UCqu9w7Mw14mAUQMzcyV3D4A' },
+  // fan-made full-episodes playlist (Bronson B): Mattel hasn't posted the show
+  { name: 'Wishbone', list: 'PLXUunJz_da3FB5YWRoDofUj707xs-Se8H' },
   // Fisher-Price's "Kipper | Full Episodes" playlist (Mattel owns Kipper)
   { name: 'Kipper', list: 'PLKCNCfD_4af85o-6BX7nV0JLEwBv3uKE-' },
   // WildBrain's "All Episodes | Zoboomafoo" playlist

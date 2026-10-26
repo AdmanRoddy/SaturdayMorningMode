@@ -27,9 +27,10 @@ sets the channel's panel color (`red`, `yellow`, `blue` or `green`; by default t
 `slate: 'dvd'` covers that channel's commercial breaks with "Saturday Morning" bouncing around a black screen
 like an old DVD player (only the movie channel has it).
 
-Every show comes from its official channel, or a playlist on a channel run by the studio or its licensed
-distributor. Bear in the Big Blue House and Wishbone have no official episodes on YouTube, and neither does
-classic Blue's Clues, so the 2019 Blue's Clues & You! stands in. The movie channel, Saturday Matinee, plays the
+Shows come from their official channel, or a playlist on a channel run by the studio or its licensed
+distributor. Bear in the Big Blue House and Wishbone have nothing official on YouTube, so those two are
+fan-made playlists and can lose videos over time. Classic Blue's Clues isn't there officially either, so the
+2019 Blue's Clues & You! stands in. The movie channel, Saturday Matinee, plays the
 Air Bud films from Air Bud Entertainment's own channel; the other 90s movies are only rentals on YouTube, which
 won't play inside another app.
 

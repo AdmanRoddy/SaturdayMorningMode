@@ -50,7 +50,14 @@ window.SMM_CHANNELS = [
   { name: "Mister Rogers' Neighborhood", id: 'UCQr37RLNViAkEwli9WiaUug' },
   // PBS KIDS' full episodes and compilations playlist
   { name: "Daniel Tiger's Neighborhood", list: 'PLa8HWWMcQEGT8bMsS9WSyXbvbxm5i8bUW' },
-  { name: 'Arthur', id: 'UCSPzXeCRf12qayHCAtuffzw' },
+  // Arthur's channel list won't load in the TV player, so these are its official full-episode videos picked
+  // one by one: three hour-long sets from the Arthur channel (GBH) and one episode from PBS KIDS
+  { name: 'Arthur', ids: [
+    'hTwipCruUpY',   // 1 Hour Of Arthur | Arthur Full Episodes
+    'SpnQDPsaK54',   // Arthur Full Episodes (about an hour)
+    'H2Qf-mUklnw',   // Arthur Full Episodes (about an hour)
+    'WJQJQrbsuIE'    // Arthur full episode, PBS KIDS
+  ] },
   // Disney Kids' own "The New Adventures of Winnie the Pooh" playlist
   { name: 'Winnie the Pooh', list: 'PLWMhB1nOHzvs' },
   // free full movies from Air Bud Entertainment's own channel (the only ones from the list posted free by their owner)

@@ -53,7 +53,8 @@ On a phone or tablet: swipe up or down to change channel, tap for the buttons.
 ## Grown-up settings
 
 At the bottom of the guide, **Grown-ups** asks a times-table question with four big answers. Answer it and the
-settings show: captions, picture fill or fit, jump in mid-show, cover commercials, and YouTube's debug readout.
+settings show: captions, picture fill or fit, jump in mid-show, cover commercials, music during commercials,
+and YouTube's debug readout.
 They hide again as soon as the guide closes.
 
 ## What's different from BSO TV
@@ -66,3 +67,11 @@ They hide again as soon as the guide closes.
 - Its saved settings are kept separate from BSO TV's, even though both live at admanroddy.github.io.
 
 `tv.js` is a copy of BSO TV's TV helpers (Samsung remote keys, fixes for the 2018 TV's browser).
+
+## Commercial breaks
+
+YouTube still runs its ads inside the player (a page can't block them). Saturday Morning Mode covers them with
+its own screen, mutes them where the device allows it, and plays its own lofi tune over the break: original
+music generated live by the device, so there's nothing to license or download. iPads don't let a page mute
+another site's video, so there the ad's sound can still come through under the music. Signing in to YouTube
+Premium is the only way to get rid of the ads themselves.

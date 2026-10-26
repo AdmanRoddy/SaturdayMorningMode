@@ -640,12 +640,28 @@ function adBreak(on, now) {
     els.stat.classList.remove('on');           // the slate replaces the tuning screen
     clearTimeout(bannerTimer); els.banner.classList.add('hide'); els.hint.classList.add('hide'); document.body.classList.remove('ui');   // the slate has the screen to itself
     if (CHANNELS[chIndex].slate === 'dvd') dvdSlate(true); else els.ad.classList.add('on');
-    if (player && player.mute) player.mute();
+    hushAd(true);
+    if (musicOn) Lofi.start();
     adFailsafe = setTimeout(() => { dbg('cover up 90 s: taking it down'); adBreak(false, true); }, 90000);   // never leave the slate stuck up
   } else {
     if (prog && prog.token === token && !prog.seeked) els.stat.classList.add('on');   // show starts behind the tuning screen
     els.ad.classList.remove('on'); dvdSlate(false);
-    if (player && player.unMute && !muted) player.unMute();
+    Lofi.stop();
+    hushAd(false);
+  }
+}
+// Mute the ad. YouTube's ad player can come up with its own sound on, so the mute is repeated while the ad
+// runs. (iPads don't let a page silence another site's video at all; there the music plays alongside.)
+let hushTimer = 0;
+function hushAd(on) {
+  clearInterval(hushTimer);
+  if (!player || !player.mute) return;
+  if (on) {
+    const hush = () => { try { player.mute(); player.setVolume(0); } catch (e) { /* player busy */ } };
+    hush(); hushTimer = setInterval(hush, 400);
+  } else {
+    try { player.setVolume(100); } catch (e) { /* player busy */ }
+    if (!muted) { try { player.unMute(); } catch (e) { /* player busy */ } }
   }
 }
 // The DVD-player slate (a channel with slate: 'dvd'): the logo drifts corner to corner, takes new
@@ -671,6 +687,131 @@ function dvdStep(t) {
   dvd.mover.style.transform = 'translate(' + Math.round(dvd.x) + 'px,' + Math.round(dvd.y) + 'px)';
   dvd.raf = requestAnimationFrame(dvdStep);
 }
+/* ---------- commercial-break music ---------- */
+// An original lofi tune made right here by the device's sound chip (nothing to download, nobody's rights):
+// mellow electric-piano chords, a soft lazy beat, vinyl crackle and a little kalimba melody on top.
+// 78 beats a minute, Fmaj7 - Em7 - Dm7 - Cmaj9, with two melody phrases taking turns.
+let musicOn = store.get('music', true) !== false;
+const Lofi = (() => {
+  let ctx = null, out = null, keysBus = null, noise = null, timer = 0, playing = false, nextT = 0, step = 0, bar = 0, stopTimer = 0;
+  const BPM = 78, S16 = 60 / BPM / 4, SWING = S16 * 0.32;
+  const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  const CHORDS = [[53, 57, 60, 64], [52, 55, 59, 62], [50, 53, 57, 60], [48, 52, 55, 59, 62]];
+  const ROOTS = [41, 40, 38, 36];
+  const TUNE = [   // [step, note] per bar, two four-bar phrases
+    [[0, 81], [3, 79], [6, 76], [10, 74], [12, 76]], [[0, 79], [4, 76], [8, 74], [11, 72]],
+    [[2, 74], [4, 76], [7, 81], [10, 79], [14, 76]], [[0, 76], [6, 72], [8, 74]],
+    [[0, 72], [2, 74], [4, 76], [8, 79], [12, 81]], [[0, 79], [6, 76], [10, 74]],
+    [[0, 74], [3, 76], [6, 74], [8, 72], [12, 69]], [[0, 72], [8, 76]],
+  ];
+  function setup() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return false;
+    ctx = new AC();
+    const warm = ctx.createBiquadFilter(); warm.type = 'lowpass'; warm.frequency.value = 3200; warm.Q.value = 0.4;
+    out = ctx.createGain(); out.gain.value = 0;
+    out.connect(warm); warm.connect(ctx.destination);
+    keysBus = ctx.createBiquadFilter(); keysBus.type = 'lowpass'; keysBus.frequency.value = 1500; keysBus.connect(out);
+    // one second of noise for drums, and four seconds of record crackle that loops underneath
+    noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+    const nd = noise.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    const vin = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate), vd = vin.getChannelData(0);
+    for (let i = 0; i < vd.length; i++) vd[i] = (Math.random() * 2 - 1) * 0.012;
+    for (let k = 0; k < 14; k++) { const at = Math.floor(Math.random() * (vd.length - 60)), a = 0.15 + Math.random() * 0.25; for (let j = 0; j < 60; j++) vd[at + j] += (Math.random() * 2 - 1) * a * Math.exp(-j / 9); }
+    const crackle = ctx.createBufferSource(); crackle.buffer = vin; crackle.loop = true;
+    const cg = ctx.createGain(); cg.gain.value = 0.55; crackle.connect(cg); cg.connect(out); crackle.start();
+    return true;
+  }
+  function env(g, t, peak, attack, hold, decayTo, release) {
+    g.gain.value = 0;                                   // a new voice is silent until its own start time
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(peak, t + attack);
+    g.gain.setTargetAtTime(peak * decayTo, t + attack, hold / 3);
+    g.gain.setTargetAtTime(0.0001, t + hold, release / 3);
+  }
+  function keys(notes, t, len, vel) {
+    notes.forEach((m, i) => {
+      const at = t + i * 0.012;                         // a slight strum
+      const g = ctx.createGain(); g.connect(keysBus);
+      env(g, at, 0.055 * vel, 0.025, len, 0.45, 0.4);
+      [['triangle', -4], ['sine', 5]].forEach((o) => {
+        const osc = ctx.createOscillator(); osc.type = o[0]; osc.frequency.value = mtof(m); osc.detune.value = o[1];
+        osc.connect(g); osc.start(at); osc.stop(at + len + 0.8);
+      });
+    });
+  }
+  function bass(m, t, len) {
+    const g = ctx.createGain(); g.connect(out); env(g, t, 0.17, 0.02, len, 0.6, 0.15);
+    const osc = ctx.createOscillator(); osc.type = 'sine'; osc.frequency.value = mtof(m); osc.connect(g); osc.start(t); osc.stop(t + len + 0.4);
+  }
+  function kalimba(m, t) {
+    const g = ctx.createGain(); g.connect(out); env(g, t, 0.075, 0.004, 0.05, 1, 0.9);
+    const a = ctx.createOscillator(); a.type = 'sine'; a.frequency.value = mtof(m); a.connect(g); a.start(t); a.stop(t + 1.4);
+    const g2 = ctx.createGain(); g2.connect(out); env(g2, t, 0.012, 0.002, 0.02, 1, 0.25);
+    const b = ctx.createOscillator(); b.type = 'sine'; b.frequency.value = mtof(m) * 4.1; b.connect(g2); b.start(t); b.stop(t + 0.5);
+  }
+  function hit(t, type, vel) {
+    if (type === 'kick') {
+      const g = ctx.createGain(); g.connect(out); env(g, t, 0.3 * vel, 0.003, 0.08, 0.5, 0.18);
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+      o.connect(g); o.start(t); o.stop(t + 0.5);
+      return;
+    }
+    const src = ctx.createBufferSource(); src.buffer = noise;
+    const f = ctx.createBiquadFilter(), g = ctx.createGain();
+    if (type === 'snare') { f.type = 'bandpass'; f.frequency.value = 1700; f.Q.value = 0.8; env(g, t, 0.16 * vel, 0.002, 0.04, 0.4, 0.16); }
+    else { f.type = 'highpass'; f.frequency.value = 7000; env(g, t, 0.035 * vel, 0.001, 0.015, 0.3, 0.05); }
+    src.connect(f); f.connect(g); g.connect(out); src.start(t, Math.random() * 0.5); src.stop(t + 0.4);
+  }
+  function playStep(s, b, t) {
+    const ci = b % 4, tune = TUNE[b % 8], tt = t + (s % 4 === 2 ? SWING : 0), barLen = S16 * 16;
+    if (s === 0) { keys(CHORDS[ci], tt, barLen * 0.9, 1); bass(ROOTS[ci], tt, S16 * 6); }
+    if (s === 10) { keys(CHORDS[ci].slice(1), tt, S16 * 4, 0.55); bass(ROOTS[ci] + 7, tt, S16 * 3); }
+    if (s === 0 || s === 10 || (s === 7 && b % 2)) hit(tt, 'kick', s === 7 ? 0.6 : 1);
+    if (s === 4 || s === 12) hit(tt, 'snare', 1);
+    if (s % 2 === 0) hit(tt, 'hat', s % 4 === 0 ? 1 : 0.6);
+    tune.forEach((n) => { if (n[0] === s) kalimba(n[1], tt); });
+  }
+  function pump() {
+    while (nextT < ctx.currentTime + 0.3) {
+      playStep(step, bar, nextT);
+      nextT += S16; step++;
+      if (step === 16) { step = 0; bar++; }
+    }
+  }
+  return {
+    // Phones and iPads only allow sound that starts from a tap, so the "tune in" tap wakes the sound chip.
+    unlock() {
+      try {
+        if (!ctx && !setup()) return;
+        if (ctx.resume && ctx.state === 'suspended') ctx.resume();
+        const s = ctx.createBufferSource(); s.buffer = ctx.createBuffer(1, 1, 22050); s.connect(ctx.destination); s.start(0);
+      } catch (e) { /* no sound chip: commercials stay quiet */ }
+    },
+    start() {
+      try {
+        if (!ctx) this.unlock();
+        if (!ctx || playing) return;
+        if (ctx.resume && ctx.state === 'suspended') ctx.resume();
+        clearTimeout(stopTimer); clearInterval(timer);
+        playing = true; step = 0; bar = 0; nextT = ctx.currentTime + 0.12;
+        out.gain.cancelScheduledValues(ctx.currentTime);
+        out.gain.setTargetAtTime(1, ctx.currentTime, 0.3);
+        timer = setInterval(pump, 50); pump();
+        dbg('music on');
+      } catch (e) { dbg('music: ' + e.message); }
+    },
+    stop() {
+      if (!ctx || !playing) return;
+      playing = false;
+      try { out.gain.cancelScheduledValues(ctx.currentTime); out.gain.setTargetAtTime(0, ctx.currentTime, 0.25); } catch (e) { /* closed */ }
+      stopTimer = setTimeout(() => { if (!playing) clearInterval(timer); }, 1200);
+      dbg('music off');
+    },
+    get playing() { return playing; },
+  };
+})();
+window.smmMusic = Lofi;   // for trying the tune out from the console
 function dvdSlate(on) {
   if (on === dvd.on) return;
   dvd.on = on;
@@ -923,6 +1064,7 @@ function goFullscreen() {
 function start() {
   if (started) return;
   goFullscreen();
+  Lofi.unlock();           // the commercial-break music needs this tap to be allowed to play later
   started = true;
   els.boot.hidden = true;
   tune(chIndex);           // shows the tuning screen; plays now, or once the player is ready
@@ -966,6 +1108,8 @@ const SETTINGS = [
     toggle: () => { liveJump = !liveJump; store.set('live', liveJump); setSettingLabels(); showBanner(); } },
   { key: 'cover', tag: 'Ad', label: 'Cover commercials', get: () => coverAds, on: 'On', off: 'Off',
     toggle: () => { coverAds = !coverAds; store.set('cover', coverAds); if (!coverAds) adBreak(false, true); setSettingLabels(); showBanner(); } },
+  { key: 'music', tag: '♪', label: 'Music during commercials', get: () => musicOn, on: 'On', off: 'Off',
+    toggle: () => { musicOn = !musicOn; store.set('music', musicOn); if (!musicOn) Lofi.stop(); else if (adOn) Lofi.start(); setSettingLabels(); } },
   { key: 'debug', tag: '?', label: 'Show what YouTube says', get: () => DEBUG, on: 'On', off: 'Off',
     toggle: () => { DEBUG = !DEBUG; store.set('debug', DEBUG); const el = document.getElementById('dbg'); if (el) el.hidden = !DEBUG; if (DEBUG) dbg('showing what YouTube says'); setSettingLabels(); } },
 ];

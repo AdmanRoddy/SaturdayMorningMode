@@ -22,8 +22,16 @@ Everything is in `channels.js`. Channel numbers follow the order in the list. Ea
 | Hand-picked videos only | `{ name: 'Favorites', ids: ['videoId', 'videoId'] }` |
 | Several creators shuffled together | `{ name: 'Cartoon Mix', mix: ['UC…', 'UC…'] }` |
 
-Optional on any channel: `min: 120` skips videos shorter than that many seconds (default 60), and
-`color: 'yellow'` sets the channel's panel color (`red`, `yellow`, `blue` or `green`; by default they take turns).
+Optional on any channel: `min: 600` skips videos shorter than that many seconds (default 60), `color: 'yellow'`
+sets the channel's panel color (`red`, `yellow`, `blue` or `green`; by default they take turns), and
+`slate: 'dvd'` covers that channel's commercial breaks with "Saturday Morning" bouncing around a black screen
+like an old DVD player (only the movie channel has it).
+
+Every show comes from its official channel, or a playlist on a channel run by the studio or its licensed
+distributor. Bear in the Big Blue House and Wishbone have no official episodes on YouTube, and neither does
+classic Blue's Clues, so the 2019 Blue's Clues & You! stands in. The movie channel, Saturday Matinee, plays the
+Air Bud films from Air Bud Entertainment's own channel; the other 90s movies are only rentals on YouTube, which
+won't play inside another app.
 
 To find a creator's id: on their YouTube channel page, open **About**, then **Share channel > Copy channel ID**.
 It starts with `UC`.

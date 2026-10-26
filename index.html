@@ -1,0 +1,1010 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="theme-color" content="#2753A6">
+<title>Saturday Morning Mode</title>
+<script>/* Older smart-TV browsers (2018 Samsung / Chromium 56) are missing a couple of things; add them before anything else runs. */
+(function(){
+if(!String.prototype.padStart){String.prototype.padStart=function(len,pad){var s=String(this);pad=pad===undefined?' ':String(pad);if(s.length>=len||!pad.length)return s;var fill='';while(fill.length<len-s.length)fill+=pad;return fill.slice(0,len-s.length)+s;};}
+if(typeof window.AbortController==='undefined'){window.AbortController=function(){var self=this;this.signal={aborted:false};this.abort=function(){self.signal.aborted=true;};};}
+})();
+</script>
+<script src="tv.js"></script>
+<script>/* Inside the Bent Steering Samsung app, the remote's Back button goes to the Bent Steering home screen. */
+if (window.bsoHomeUrl) window.bsoHomeUrl = function () { return 'https://admanroddy.github.io/BSO/home/?host=tizen&nosplash=1'; };
+</script>
+<script src="channels.js"></script>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='3' y='3' width='58' height='58' rx='14' fill='%232753A6' stroke='%231D1230' stroke-width='4'/%3E%3Cpath d='M3 32h58M32 3v58' stroke='%231D1230' stroke-width='4'/%3E%3Cpath d='M5 30V17A12 12 0 0 1 17 5h13v25z' fill='%23D52B1E'/%3E%3Cpath d='M34 5h13a12 12 0 0 1 12 12v13H34z' fill='%23F7C31A'/%3E%3Cpath d='M5 34h25v25H17A12 12 0 0 1 5 47z' fill='%2378B157'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Luckiest+Guy&display=swap">
+<style>
+/* Golf Harlequin paint: Tornado Red, Ginster Yellow, Chagall Blue, Pistachio Green, with cartoon ink outlines */
+:root{--red:#D52B1E;--yellow:#F7C31A;--blue:#2753A6;--green:#78B157;--ink:#1D1230;--grape:#33205C;--white:#FFFFFF;--soft:#E4DDF2;--line:.3rem;--pop:.55rem}
+*{box-sizing:border-box}
+/* 16px on a 1080p TV, scaling with the screen (no clamp() on the 2018 TV engine) */
+html{font-size:.8333vw}
+@media (max-width:1320px){html{font-size:11px}}
+@media (min-width:3120px){html{font-size:26px}}
+@media (max-aspect-ratio:1/1){html{font-size:13px}}
+html,body{margin:0;height:100%;background:#000;color:var(--white);overflow:hidden;
+  font-family:'Fredoka','Trebuchet MS',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-weight:600;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:.3rem solid var(--white);outline-offset:.25rem}
+.fun,.logo,.ch-num b,.ch-name,.live,.row .n,.row .t,.notice h2,.numentry,.ab-title,.tuning,.gate-card h2,.answers button{font-family:'Luckiest Guy','Arial Black',Impact,sans-serif;font-weight:400}
+
+/* each channel owns one Harlequin panel color */
+.p-red{background:var(--red);color:var(--white)}
+.p-yellow{background:var(--yellow);color:var(--ink)}
+.p-blue{background:var(--blue);color:var(--white)}
+.p-green{background:var(--green);color:var(--ink)}
+.p-white{background:var(--white);color:var(--ink)}
+
+#stage{position:fixed;top:0;right:0;bottom:0;left:0;background:#000;overflow:hidden}
+#player,#stage iframe{position:absolute;top:0;right:0;bottom:0;left:0;width:100%;height:100%;border:0;pointer-events:none}
+/* Every tap and click lands here, never on YouTube's player, so kids can't wander off into YouTube. */
+#touch{position:fixed;top:0;right:0;bottom:0;left:0;touch-action:none}
+/* iPad/iPhone: Safari only lets YouTube start with sound after one tap on YouTube's own player */
+body.tapyt #player,body.tapyt #stage iframe{pointer-events:auto}
+body.tapyt #touch{pointer-events:none}
+#tapchip{position:fixed;left:50%;top:6%;transform:translateX(-50%);z-index:9;padding:1rem 1.8rem;border-radius:1.2rem;background:var(--yellow);color:var(--ink);
+  border:var(--line) solid var(--ink);box-shadow:var(--pop) var(--pop) 0 var(--ink);font-size:1.7rem;font-weight:700;text-align:center;pointer-events:none;display:none}
+body.tapyt #tapchip{display:block}
+body.tapgo #tapchip{display:none}
+#tapchip small{display:block;margin-top:.2rem;font-size:1.1rem;font-weight:600}
+#dbg{position:fixed;left:.5rem;top:.5rem;z-index:40;max-width:70vw;margin:0;padding:.5rem .7rem;border-radius:.4rem;background:rgba(0,0,0,.8);color:#9fe39f;font:1rem/1.35 monospace;white-space:pre-wrap;pointer-events:none}
+#dbg[hidden]{display:none}
+
+/* ---------- the logo: three panels bolted on like a Harlequin's doors ---------- */
+.logo{display:inline-block;line-height:1;white-space:nowrap;text-align:left}
+.logo .w{display:table;padding:.2em .3em .02em;border:.055em solid var(--ink);border-radius:.16em;box-shadow:.07em .07em 0 var(--ink)}
+.logo .w1{background:var(--red);color:var(--white);text-shadow:.045em .045em 0 var(--ink);transform:rotate(-3deg)}
+.logo .w2{background:var(--yellow);color:var(--ink);margin:-.1em 0 0 .55em;transform:rotate(2deg)}
+.logo .w3{background:var(--green);color:var(--ink);margin:-.08em 0 0 .2em;transform:rotate(-1.5deg)}
+.logo .tv{display:inline-block;width:.86em;height:.86em;margin:0 0 0 .14em;vertical-align:-.1em}
+.bug{position:fixed;right:3rem;top:2.4rem;z-index:5;font-size:2.1rem;opacity:0;pointer-events:none;transition:opacity .35s ease}
+body.ui .bug{opacity:1}      /* the logo shows with the info banner, never over the show */
+body.guiding .bug{opacity:0} /* the guide has its own */
+
+/* Memphis confetti, the kind printed on every 90s lunchbox */
+.confetti{position:absolute;top:-10%;right:-10%;bottom:-10%;left:-10%;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 46q15-22 30 0t30 0t30 0' stroke='%23F7C31A'/%3E%3Cpath d='M176 26l26 44h-52z' stroke='%23D52B1E'/%3E%3Cpath d='M28 196l18-18 18 18 18-18 18 18' stroke='%23FFFFFF'/%3E%3Ccircle cx='206' cy='184' r='17' stroke='%2378B157'/%3E%3Cpath d='M124 118l12 12m0-12l-12 12' stroke='%23FFFFFF'/%3E%3Cpath d='M214 236q12-14 24 0' stroke='%23F7C31A'/%3E%3C/g%3E%3Ccircle cx='102' cy='78' r='7' fill='%2378B157'/%3E%3Ccircle cx='238' cy='112' r='6' fill='%23F7C31A'/%3E%3Ccircle cx='146' cy='228' r='7' fill='%23D52B1E'/%3E%3Ccircle cx='52' cy='126' r='5' fill='%23FFFFFF'/%3E%3C/svg%3E") 0 0 repeat;
+  background-size:24rem 24rem;opacity:.5}
+
+/* ---------- boot ---------- */
+#boot{position:fixed;top:0;right:0;bottom:0;left:0;z-index:20;background:var(--blue);display:flex;align-items:center;justify-content:center;overflow:hidden}
+#boot[hidden]{display:none}
+#boot .confetti{opacity:0;animation:confettiIn .7s ease 1.25s forwards}
+@keyframes confettiIn{to{opacity:.5}}
+.boot-inner{position:relative;display:flex;flex-direction:column;align-items:center}
+#boot .logo{font-size:9.5rem}
+#boot .w{opacity:0}
+#boot .w1{animation:slam1 .6s cubic-bezier(.25,1.5,.5,1) .3s forwards}
+#boot .w2{animation:slam2 .6s cubic-bezier(.25,1.5,.5,1) .6s forwards}
+#boot .w3{animation:slam3 .6s cubic-bezier(.25,1.5,.5,1) .9s forwards}
+@keyframes slam1{0%{opacity:0;transform:translateX(-70vw) rotate(-24deg)}30%{opacity:1}100%{opacity:1;transform:rotate(-3deg)}}
+@keyframes slam2{0%{opacity:0;transform:translateX(70vw) rotate(22deg)}30%{opacity:1}100%{opacity:1;transform:rotate(2deg)}}
+@keyframes slam3{0%{opacity:0;transform:translateY(-70vh) rotate(-30deg)}30%{opacity:1}100%{opacity:1;transform:rotate(-1.5deg)}}
+.tune-in{margin-top:5.5rem;opacity:0;padding:1rem 2.4rem;border:var(--line) solid var(--ink);border-radius:3rem;background:var(--white);color:var(--ink);
+  box-shadow:.45rem .45rem 0 var(--ink);font-size:2.3rem;font-weight:700;cursor:pointer;animation:fade .45s ease 1.7s forwards, bob 1.8s ease-in-out 2.2s infinite}
+@keyframes fade{to{opacity:1}}
+@keyframes bob{50%{transform:translateY(-.5rem)}}
+.key{display:inline-block;padding:.1rem .65rem;margin:0 .3rem;border:.2rem solid var(--ink);border-radius:.55rem;background:var(--yellow);color:var(--ink);font-weight:700}
+
+/* ---------- tuning: Harlequin color bars between shows ---------- */
+.static{position:fixed;top:0;right:0;bottom:0;left:0;z-index:4;pointer-events:none;opacity:0;transition:opacity .25s ease;overflow:hidden;
+  background:linear-gradient(90deg,#F2EEF9 0%,#F2EEF9 16.66%,var(--yellow) 16.66%,var(--yellow) 33.33%,var(--green) 33.33%,var(--green) 50%,var(--red) 50%,var(--red) 66.66%,var(--blue) 66.66%,var(--blue) 83.33%,var(--grape) 83.33%,var(--grape) 100%)}
+.static.on{opacity:1}
+.static::before{content:'';position:absolute;left:0;right:0;bottom:0;height:24%;background:var(--ink)}
+.static::after{content:'';position:absolute;top:0;right:0;bottom:0;left:0;
+  background:repeating-linear-gradient(0deg,rgba(29,18,48,.16) 0,rgba(29,18,48,.16) 2px,transparent 2px,transparent 6px);animation:roll .5s linear infinite}
+@keyframes roll{to{background-position:0 12px}}
+.static .tuning{position:absolute;left:50%;top:40%;z-index:1;padding:1.1rem 2.2rem .6rem;transform:translate(-50%,-50%) rotate(-2deg);border:var(--line) solid var(--ink);border-radius:1.4rem;
+  background:var(--white);color:var(--ink);box-shadow:var(--pop) var(--pop) 0 var(--ink);font-size:3.2rem;white-space:nowrap}
+.static .tuning:empty{display:none}
+
+/* ---------- info banner ---------- */
+.banner{position:fixed;left:7rem;right:3.5rem;bottom:3rem;z-index:5;display:flex;align-items:center;padding:1.3rem 1.6rem 1.3rem 8.6rem;
+  background:var(--blue);border:var(--line) solid var(--ink);border-radius:1.8rem;box-shadow:var(--pop) var(--pop) 0 var(--ink);
+  transition:opacity .3s ease, transform .3s ease}
+.banner.hide{opacity:0;transform:translateY(2rem);pointer-events:none}
+.ch-num{position:absolute;left:-4rem;top:50%;width:11rem;height:11rem;margin-top:-5.5rem;border-radius:50%;border:var(--line) solid var(--ink);
+  box-shadow:.4rem .4rem 0 var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-8deg)}
+.ch-num small{font-size:1.3rem;font-weight:700;line-height:1}
+.ch-num b{font-size:5.2rem;line-height:.9;margin-top:.45rem}
+.ch-info{flex:1;min-width:0;display:flex;flex-direction:column}
+.ch-top{display:flex;align-items:center}
+.ch-name{min-width:0;padding-top:.35rem;font-size:3.1rem;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:.2rem .2rem 0 var(--ink)}
+.live{flex:0 0 auto;margin-left:1rem;padding:.4rem .8rem .1rem;border:.2rem solid var(--ink);border-radius:.6rem;background:var(--red);color:var(--white);font-size:1.3rem;letter-spacing:.05em}
+.live.off{background:var(--white);color:var(--ink)}
+.live.start{background:var(--yellow);color:var(--ink)}
+.ch-title{margin-top:.25rem;font-size:1.75rem;font-weight:600;color:#DDE6FA;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prog{display:flex;align-items:center;margin-top:.8rem;font-size:1.35rem;font-weight:700;font-variant-numeric:tabular-nums}
+.prog .bar{flex:1;height:1.1rem;margin:0 1rem;border:.2rem solid var(--ink);border-radius:.7rem;background:rgba(255,255,255,.22);overflow:hidden}
+.prog .bar i{display:block;height:100%;width:0;background:var(--yellow)}
+.ch-btns{flex:0 0 auto;display:flex;align-items:center;margin-left:1rem}
+.ch-btns button{flex:0 0 auto;margin-left:.8rem;width:4.8rem;height:4.8rem;padding:0;border:.22rem solid var(--ink);border-radius:50%;box-shadow:.25rem .25rem 0 var(--ink);
+  display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ch-btns button.wide{width:auto;padding:0 1.4rem;border-radius:2.4rem;font-size:1.55rem;font-weight:700}
+.ch-btns button:active{transform:translate(.2rem,.2rem);box-shadow:.05rem .05rem 0 var(--ink)}
+.ch-btns svg{width:1.9rem;height:1.9rem}
+#btn-pause .i-play{display:none}
+#btn-pause.paused .i-play{display:block}
+#btn-pause.paused .i-pause{display:none}
+.hint{position:fixed;right:3.5rem;bottom:17rem;z-index:5;display:flex;align-items:center;padding:.55rem 1.1rem;border:.22rem solid var(--ink);border-radius:1rem;
+  background:var(--white);color:var(--ink);box-shadow:.3rem .3rem 0 var(--ink);font-size:1.3rem;font-weight:700;transition:opacity .3s ease}
+.hint .key{margin:0 .5rem 0 1.2rem}
+.hint .key:first-child{margin-left:0}
+.hint.hide{opacity:0}
+body.touch .hint{display:none}
+
+/* ---------- guide ---------- */
+.guide{position:fixed;left:0;top:0;bottom:0;width:46rem;max-width:92vw;z-index:8;background:var(--grape);border-right:var(--line) solid var(--ink);overflow:hidden;
+  box-shadow:.6rem 0 0 rgba(29,18,48,.5);display:flex;flex-direction:column;transform:translateX(-106%);transition:transform .32s cubic-bezier(.3,1.25,.5,1)}
+.guide.open{transform:none}
+.guide .confetti{opacity:.16}
+.guide header{position:relative;padding:2.4rem 2.4rem 1rem 2.6rem;display:flex;align-items:flex-end;justify-content:space-between}
+.guide header .logo{font-size:2.5rem}
+.g-sub{font-size:1.5rem;font-weight:700;color:var(--soft);padding-bottom:.4rem}
+.list{position:relative;flex:1;overflow-y:auto;padding:.4rem 2.2rem 2.6rem 1.8rem;scrollbar-width:none}
+.list::-webkit-scrollbar{display:none}
+.row{width:100%;display:flex;align-items:center;margin-top:1rem;padding:.75rem 1.2rem;border:.25rem solid var(--ink);border-radius:1.1rem;box-shadow:.3rem .3rem 0 var(--ink);
+  text-align:left;cursor:pointer;transition:transform .12s ease, box-shadow .12s ease}
+.row[hidden]{display:none}
+.row .n{flex:0 0 3.6rem;height:3.6rem;padding-top:.3rem;border:.2rem solid var(--ink);border-radius:50%;background:var(--white);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;font-size:1.7rem}
+.row .n svg{width:1.7rem;height:1.7rem;margin-top:-.3rem}
+.row .t{flex:1;min-width:0;margin-left:1.1rem;padding-top:.3rem;font-size:2.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .now{flex:0 0 auto;margin-left:1rem;padding:.3rem .7rem .05rem;border-radius:.5rem;background:var(--ink);color:var(--white);font-family:'Luckiest Guy','Arial Black',sans-serif;font-size:1.15rem}
+.row.cursor{transform:translate(-.25rem,-.25rem) scale(1.03);box-shadow:.65rem .65rem 0 var(--ink);outline:.3rem solid var(--white);outline-offset:.15rem}
+.row.grown{margin-top:2.2rem}
+.row.grown .t,.row.setting .t{font-family:'Fredoka','Trebuchet MS',sans-serif;font-weight:700;font-size:1.65rem;padding-top:0}
+.row .state{flex:0 0 auto;margin-left:1rem;padding:.15rem .7rem;border:.2rem solid var(--ink);border-radius:.5rem;background:var(--white);font-size:1.2rem;font-weight:700}
+.row .state.on{background:var(--green)}
+.row.setting{background:#F2EEF9;color:var(--ink)}
+.row.setting .n{font-family:'Fredoka','Trebuchet MS',sans-serif;font-weight:700;font-size:1.25rem;padding-top:0;background:var(--yellow)}
+
+/* ---------- grown-ups question ---------- */
+.gate{position:fixed;top:0;right:0;bottom:0;left:0;z-index:12;background:rgba(29,18,48,.72);display:flex;align-items:center;justify-content:center}
+.gate[hidden]{display:none}
+.gate-card{width:58rem;max-width:92vw;padding:2.6rem 3rem 2.4rem;border:var(--line) solid var(--ink);border-radius:2rem;background:var(--yellow);color:var(--ink);
+  box-shadow:var(--pop) var(--pop) 0 var(--ink);text-align:center}
+.gate-card.shake{animation:shake .45s ease}
+@keyframes shake{20%{transform:translateX(-1.2rem)}40%{transform:translateX(1rem)}60%{transform:translateX(-.7rem)}80%{transform:translateX(.4rem)}}
+.gate-card h2{margin:0;font-size:3.2rem;line-height:1.1}
+.gate-q{margin:.9rem 0 2rem;font-size:2.7rem;font-weight:700}
+.answers{display:flex;justify-content:center}
+.answers button{margin:0 .8rem;width:9.4rem;height:9.4rem;padding-top:.6rem;border:var(--line) solid var(--ink);border-radius:50%;box-shadow:.4rem .4rem 0 var(--ink);font-size:3.5rem;cursor:pointer;
+  transition:transform .12s ease, box-shadow .12s ease}
+.answers button.cursor{transform:translate(-.2rem,-.2rem) scale(1.08);box-shadow:.7rem .7rem 0 var(--ink);outline:.3rem solid var(--white);outline-offset:.2rem}
+.gate-note{margin:2rem 0 0;font-size:1.45rem;font-weight:600}
+
+/* ---------- notices ---------- */
+.notice{position:fixed;left:50%;top:42%;z-index:6;width:48rem;max-width:90vw;padding:2rem 2.4rem 2.2rem;transform:translate(-50%,-50%);border:var(--line) solid var(--ink);border-radius:1.6rem;
+  background:var(--white);color:var(--ink);box-shadow:var(--pop) var(--pop) 0 var(--ink);text-align:center}
+.notice[hidden]{display:none}
+.notice h2{margin:0 0 .6rem;font-size:2.7rem;line-height:1.1}
+.notice p{margin:0;font-size:1.55rem;line-height:1.4;font-weight:500}
+.numentry{position:fixed;right:3rem;top:7.5rem;z-index:7;min-width:7.5rem;padding:1rem 1.2rem .4rem;border:var(--line) solid var(--ink);border-radius:1.4rem;background:var(--yellow);color:var(--ink);
+  box-shadow:.4rem .4rem 0 var(--ink);font-size:4.4rem;text-align:center;transform:rotate(4deg)}
+.numentry[hidden]{display:none}
+
+/* ---------- commercial break: covers YouTube's ads with a Saturday Morning slate ---------- */
+.adbreak{position:fixed;top:0;right:0;bottom:0;left:0;z-index:4;display:flex;align-items:center;justify-content:center;overflow:hidden;opacity:0;pointer-events:none;
+  background:var(--blue);transition:opacity .3s ease}
+.adbreak.on{opacity:1}
+.ab-inner{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;max-width:86vw}
+.adbreak .logo{font-size:5.6rem}
+.ab-title{margin:3.6rem 0 0;font-size:6.6rem;line-height:1;color:var(--white);text-shadow:.4rem .4rem 0 var(--ink)}
+.ab-dots{display:flex;margin-top:2.2rem}
+.ab-dots i{display:block;width:1.6rem;height:1.6rem;margin:0 .6rem;border:.22rem solid var(--ink);border-radius:50%;animation:hop 1.2s ease-in-out infinite}
+.ab-dots i:nth-child(1){background:var(--red)}
+.ab-dots i:nth-child(2){background:var(--yellow);animation-delay:.15s}
+.ab-dots i:nth-child(3){background:var(--green);animation-delay:.3s}
+.ab-dots i:nth-child(4){background:var(--white);animation-delay:.45s}
+@keyframes hop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-1.1rem)}}
+.ab-ch{margin-top:2rem;font-size:2rem;font-weight:700}
+.ab-note{position:absolute;left:0;right:0;bottom:2.4rem;margin:0;padding:0 2rem;text-align:center;font-size:1.3rem;font-weight:500;color:rgba(255,255,255,.78)}
+
+/* ---------- phones held upright ---------- */
+@media (max-aspect-ratio:1/1){
+  .bug{font-size:1.4rem;right:1rem;top:1rem}
+  .banner{left:.9rem;right:.9rem;bottom:.9rem;bottom:calc(.9rem + env(safe-area-inset-bottom));flex-wrap:wrap;padding:1rem 1rem 1.1rem 6.8rem;border-radius:1.4rem}
+  .ch-num{left:-.6rem;top:-1.6rem;margin-top:0;width:7rem;height:7rem}
+  .ch-num small{font-size:.9rem} .ch-num b{font-size:3.2rem;margin-top:.3rem}
+  .ch-info{flex:1 1 100%}
+  .ch-name{font-size:1.9rem} .ch-title{font-size:1.15rem} .live{font-size:1rem}
+  .ch-btns{flex:1 1 100%;flex-wrap:wrap;margin:.3rem 0 0 -5.8rem}
+  .ch-btns button{margin:.7rem .7rem 0 0;width:3.8rem;height:3.8rem}
+  .ch-btns button.wide{padding:0 1.1rem;font-size:1.2rem}
+  .row .t{font-size:1.65rem} .row .now{font-size:.95rem}
+  .hint{display:none}
+  #boot .logo{font-size:4.6rem}
+  .tune-in{font-size:1.6rem}
+  .adbreak .logo{font-size:3.2rem} .ab-title{font-size:3rem} .ab-ch{font-size:1.3rem} .ab-note{font-size:.95rem;bottom:1.5rem}
+  .answers button{width:6.4rem;height:6.4rem;font-size:2.4rem;margin:0 .4rem}
+  .gate-card h2{font-size:2.2rem} .gate-q{font-size:1.9rem}
+}
+@media (prefers-reduced-motion:reduce){
+  #boot .w,#boot .confetti,.tune-in{animation:none;opacity:1}
+  #boot .confetti{opacity:.5}
+  .static::after,.ab-dots i{animation:none}
+}
+</style>
+</head>
+<body>
+<div id="stage"><div id="player"></div></div>
+<div id="touch" aria-hidden="true"></div>
+<div id="tapchip" role="status">Tap the video to start<small>iPad and iPhone need one tap on the player for sound</small></div>
+
+<div class="bug" aria-hidden="true"><div class="logo"><span class="w w1">Saturday</span><span class="w w2">Morning</span><span class="w w3">Mode<svg class="tv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l4 4 4-4"/><rect x="2.5" y="7" width="19" height="14" rx="3" fill="#fff"/></svg></span></div></div>
+
+<div class="static on" id="static"><div class="tuning" id="tuning">Tuning…</div></div>
+
+<div class="adbreak" id="adbreak" aria-live="polite">
+  <div class="confetti"></div>
+  <div class="ab-inner">
+    <div class="logo"><span class="w w1">Saturday</span><span class="w w2">Morning</span><span class="w w3">Mode<svg class="tv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l4 4 4-4"/><rect x="2.5" y="7" width="19" height="14" rx="3" fill="#fff"/></svg></span></div>
+    <h2 class="ab-title">We'll be right back!</h2>
+    <div class="ab-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div class="ab-ch" id="ab-ch"></div>
+  </div>
+  <p class="ab-note">No commercial breaks with YouTube Premium: sign in at youtube.com in this browser.</p>
+</div>
+
+<section class="banner hide" id="banner" aria-live="polite">
+  <div class="ch-num p-red" id="b-bubble"><small>Channel</small><b id="b-num">1</b></div>
+  <div class="ch-info">
+    <div class="ch-top"><div class="ch-name" id="b-name">&nbsp;</div><span class="live" id="b-live">Live</span></div>
+    <div class="ch-title" id="b-title">&nbsp;</div>
+    <div class="prog"><span id="b-cur">0:00</span><div class="bar"><i id="b-bar"></i></div><span id="b-dur">0:00</span></div>
+  </div>
+  <div class="ch-btns">
+    <button id="btn-down" class="p-green" aria-label="Channel down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    <button id="btn-up" class="p-green" aria-label="Channel up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+    <button id="btn-pause" class="p-yellow" aria-label="Pause"><svg class="i-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5.5" y="4.5" width="4.5" height="15" rx="1.4"/><rect x="14" y="4.5" width="4.5" height="15" rx="1.4"/></svg><svg class="i-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.6v14.8a1 1 0 0 0 1.5.9l12-7.4a1 1 0 0 0 0-1.8l-12-7.4A1 1 0 0 0 7 4.6z"/></svg></button>
+    <button id="btn-restart" class="wide p-red">Start over</button>
+    <button id="btn-guide" class="wide p-yellow">Guide</button>
+    <button id="btn-sound" class="wide p-green">Mute</button>
+  </div>
+</section>
+<div class="hint hide" id="hint"><span class="key">▲ ▼</span>Channels<span class="key">OK</span>Guide<span class="key">◀</span>Last channel<span class="key">▶</span>Start over</div>
+
+<aside class="guide" id="guide" aria-label="Channel guide">
+  <div class="confetti"></div>
+  <header>
+    <div class="logo"><span class="w w1">Saturday</span><span class="w w2">Morning</span><span class="w w3">Mode<svg class="tv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l4 4 4-4"/><rect x="2.5" y="7" width="19" height="14" rx="3" fill="#fff"/></svg></span></div>
+    <span class="g-sub">What's on</span>
+  </header>
+  <div class="list" id="list"></div>
+</aside>
+
+<div class="gate" id="gate" hidden>
+  <div class="gate-card" id="gate-card" role="dialog" aria-labelledby="gate-h">
+    <h2 id="gate-h">Grown-ups only</h2>
+    <p class="gate-q" id="gate-q"></p>
+    <div class="answers" id="gate-a"></div>
+    <p class="gate-note" id="gate-note"></p>
+  </div>
+</div>
+
+<div class="notice" id="notice" hidden><h2 id="n-title"></h2><p id="n-text"></p></div>
+<div class="numentry" id="numentry" hidden></div>
+
+<div id="boot">
+  <div class="confetti"></div>
+  <div class="boot-inner">
+    <div class="logo" role="img" aria-label="Saturday Morning Mode"><span class="w w1">Saturday</span><span class="w w2">Morning</span><span class="w w3">Mode<svg class="tv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l4 4 4-4"/><rect x="2.5" y="7" width="19" height="14" rx="3" fill="#fff"/></svg></span></div>
+    <button class="tune-in" id="tune-in">Press <span class="key">OK</span> to tune in</button>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* Saturday Morning Mode runs on the BSO TV engine: each channel is a YouTube creator, playlist or set of
+   videos playing like live TV. What's different for kids:
+   - only the channels in channels.js, and every tap lands on Saturday Morning Mode, never on YouTube's
+     own player (no YouTube logo, titles or "more videos" to tap through to)
+   - settings sit behind a grown-ups question in the guide
+   - shorter videos are allowed (songs and short cartoons), down to a minute */
+const CHANNELS = (window.SMM_CHANNELS || []).filter((c) => c && c.name && (c.id || c.list || c.ids || c.mix)).map((c) => {
+  const ch = Object.assign({}, c);
+  if (!ch.id) ch.id = ch.list || ('ch-' + ch.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+  return ch;
+});
+const PAINT = ['red', 'yellow', 'blue', 'green'];
+const paintOf = (i) => { const c = CHANNELS[i] && CHANNELS[i].color; return PAINT.indexOf(c) >= 0 ? c : PAINT[i % PAINT.length]; };
+const MIN_LEN = 60;         // skip clips under a minute (hand-picked "ids" channels play everything)
+const MAX_TRIES = 10;       // videos to try before calling a channel off the air
+const LOCAL = location.protocol === 'file:' || location.origin === 'null';   // opened as a saved file: YouTube refuses to play here
+const NEED_LINK = ['Open Saturday Morning Mode from its web link', 'YouTube won\'t play videos in a page opened from a saved file or a preview. Open the web address in a browser instead.'];
+const NO_YT = ['Can\'t reach YouTube', 'Check the internet connection, then reload.'];
+const NO_CHANNELS = ['No channels yet', 'Add channels to channels.js, then reload this page.'];
+const $ = (id) => document.getElementById(id);
+const els = {
+  boot: $('boot'), tuneIn: $('tune-in'), banner: $('banner'), hint: $('hint'), bubble: $('b-bubble'), num: $('b-num'), name: $('b-name'), live: $('b-live'),
+  title: $('b-title'), cur: $('b-cur'), dur: $('b-dur'), bar: $('b-bar'), guide: $('guide'), list: $('list'),
+  notice: $('notice'), nTitle: $('n-title'), nText: $('n-text'), stat: $('static'), tuning: $('tuning'),
+  numentry: $('numentry'), sound: $('btn-sound'), pause: $('btn-pause'), ad: $('adbreak'), abCh: $('ab-ch'),
+  gate: $('gate'), gateCard: $('gate-card'), gateQ: $('gate-q'), gateA: $('gate-a'), gateNote: $('gate-note'),
+};
+
+/* ---------- small helpers ---------- */
+const pad2 = (n) => String(n).padStart(2, '0');
+const fmt = (s) => { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' + pad2(m) : m) + ':' + pad2(x); };
+function hash(str) { let h = 2166136261 >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rand(seed) { let t = (seed + 0x6D2B79F5) >>> 0; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
+const hourNow = () => Math.floor(Date.now() / 3600000);
+const secIntoHour = () => (Date.now() % 3600000) / 1000;
+// Same web address as BSO TV (admanroddy.github.io), so everything is kept under its own name.
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('smm:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('smm:' + k, JSON.stringify(v)); } catch (e) { /* storage off */ } },
+};
+
+/* ---------- state ---------- */
+const IN_APP = !!window.BSO_IN_APP || /BSOTV/i.test(navigator.userAgent);    // inside the Bent Steering Fire Stick or Samsung app
+const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const TOUCH = IOS || /Android|Mobi/i.test(navigator.userAgent);
+if (TOUCH && !IN_APP) document.body.classList.add('touch');
+let player = null, apiReady = false, started = false;
+let chIndex = Math.min(Math.max(0, store.get('last', 0)), Math.max(0, CHANNELS.length - 1)), prevIndex = chIndex;
+let token = 0;                          // bumps on every tune, so stale callbacks can tell
+let prog = null;                        // {vid, live, seeked, seq, tries, token, pinned}
+const playlists = new Map();            // channel id -> [video ids]
+// Only videos YouTube refuses for good (removed, private, no embedding) are remembered as bad.
+const bad = new Set(store.get('bad', []));
+const skipped = new Set();               // this visit only: videos that failed for other reasons
+const PERMANENT_ERR = { 100: 1, 101: 1, 150: 1 };
+let unlocked = false;                    // iPad/iPhone: YouTube's player has had its one tap
+let DEBUG = /[?&]debug\b/.test(location.search) || !!store.get('debug', false);
+let coverAds = store.get('cover', true) !== false;   // Commercial cover: hide and mute YouTube's ads behind the Saturday Morning slate
+let liveJump = !!store.get('live', false);           // off: shows start from the top (fewer ads)
+const dbgLines = [];
+function dbg(m) {
+  if (!DEBUG) return;
+  dbgLines.push(new Date().toTimeString().slice(0, 8) + ' ' + m);
+  while (dbgLines.length > 14) dbgLines.shift();
+  let el = document.getElementById('dbg');
+  if (!el) { el = document.createElement('pre'); el.id = 'dbg'; document.body.appendChild(el); }
+  el.hidden = false;
+  el.textContent = dbgLines.join('\n');
+}
+let cueWaiter = null, guideOpen = false, guideCursor = 0, muted = false;
+let ccOn = !!store.get('cc', false);    // captions: off unless a grown-up turns them on
+let resume = null;                      // what was playing when the player was rebuilt for captions
+let watchdog = 0, ytBlocked = false;
+let grownUps = false;                   // settings shown in the guide (until the guide closes)
+let gateOpen = false, gateAnswer = 0, gateCursor = 0;
+
+/* ---------- schedule ---------- */
+// Same channel + same hour => same program, so flipping away and back feels like live TV.
+function pickVideo(ch, ids, seq) {
+  const good = ids.filter((v) => !bad.has(v) && !skipped.has(v));
+  const pool = good.length ? good : ids;
+  return pool[Math.floor(rand(hash(ch.id + ':' + hourNow() + ':' + seq)) * pool.length)];
+}
+function liveOffset(dur) {
+  const span = Math.max(60, dur - 45);
+  return secIntoHour() % span;
+}
+const minLenFor = (ch) => (ch.min != null ? ch.min : (ch.ids ? 0 : MIN_LEN));
+
+/* ---------- YouTube player ---------- */
+// YouTube only honours "captions on" when its player is built (cc_load_policy), so turning captions on
+// rebuilds the player and picks the same video back up where it was.
+function makePlayer() {
+  const vars = { autoplay: 0, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, rel: 0, playsinline: 1, origin: location.origin };
+  if (IOS && !IN_APP) vars.controls = 1;     // iPad/iPhone: the one tap that starts sound lands on YouTube's play button
+  if (ccOn) Object.assign(vars, { cc_load_policy: 1, cc_lang_pref: 'en' });
+  player = new YT.Player('player', { width: '100%', height: '100%', playerVars: vars, events: { onReady: onReady, onStateChange: onStateChange, onError: onError } });
+}
+window.onYouTubeIframeAPIReady = () => { apiReady = true; makePlayer(); };
+// YouTube draws its own title bar, "More videos" strip and logo along the top and bottom edges of its
+// frame. The frame is made exactly as wide as the picture and taller than the screen, so those edges
+// sit just off-screen while the picture itself stays fully in view. That needs the video's shape
+// (widescreen vs. old 4:3 TV), which YouTube's public oEmbed lookup gives.
+let aspect = 16 / 9;
+const aspects = new Map(store.get('ar', []));
+let fillOn = store.get('fill', true) !== false;   // Picture: Fill (no black bars on a TV) or Fit (whole picture)
+function fitStage() {
+  const f = $('player');
+  if (!f) return;
+  const W = window.innerWidth, H = window.innerHeight;
+  const pad = Math.round(Math.max(90, H * 0.14));
+  // Fill zooms the picture to cover a landscape screen (old 4:3 cartoons lose a little off the top and
+  // bottom); a phone held upright always fits, since covering it would crop most of the picture.
+  const cover = fillOn && W >= H && aspect > 1.1 && aspect < 2.5;
+  let w, h;
+  if ((W / H > aspect) === cover) { w = W; h = W / aspect; } else { h = H; w = H * aspect; }
+  w = Math.round(w); h = Math.round(h);
+  const fh = Math.max(H, h) + 2 * pad;
+  Object.assign(f.style, { left: Math.round((W - w) / 2) + 'px', top: Math.round((H - fh) / 2) + 'px', right: 'auto', bottom: 'auto', width: w + 'px', height: fh + 'px' });
+}
+window.addEventListener('resize', fitStage);
+fitStage();
+function setAspect(ar) { if (ar > 0.3 && ar < 4 && Math.abs(ar - aspect) > 0.01) { aspect = ar; fitStage(); } }
+async function shapeFor(vid) {
+  if (aspects.has(vid)) { setAspect(aspects.get(vid)); return; }
+  setAspect(16 / 9);
+  try {
+    const r = await fetch('https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + vid));
+    if (!r.ok) return;
+    const j = await r.json();
+    if (!j.width || !j.height) return;
+    const ar = j.width / j.height;
+    aspects.set(vid, ar);
+    store.set('ar', [...aspects].slice(-600));
+    if (prog && prog.vid === vid) setAspect(ar);
+  } catch (e) { /* keep widescreen */ }
+}
+// YouTube turns on its auto-generated captions by itself; keep them off.
+function captionsOff() {
+  if (!player) return;
+  try { player.setOption('captions', 'track', {}); } catch (e) { /* no captions */ }
+  try { player.unloadModule('captions'); } catch (e) { /* no captions module */ }
+  try { player.unloadModule('cc'); } catch (e) { /* older player */ }
+}
+// Show the picture once YouTube's own play button and title have faded (they flash for a moment
+// whenever a video starts or jumps), unless a commercial break is covering the screen.
+const REVEAL_DELAY = IOS ? 3500 : 2000;
+function reveal() { if (!adOn) els.stat.classList.remove('on'); }
+
+function onReady() {
+  const f = player.getIframe && player.getIframe();
+  if (f) { f.setAttribute('tabindex', '-1'); f.setAttribute('aria-hidden', 'true'); }
+  fitStage();
+  // YouTube's player announces its ads with events that aren't in its public docs.
+  // If YouTube ever drops them, ads simply show as before.
+  try {
+    player.addEventListener('onAdStart', () => adBreak(true));
+    player.addEventListener('onAdEnd', () => adBreak(false));
+    player.addEventListener('onAdStateChange', (e) => { if (e && e.data === -1) adBreak(false); else if (e && (e.data === 1 || e.data === 3)) adBreak(true); });
+  } catch (err) { /* no ad events: nothing to cover */ }
+  if (resume && started && resume.ch === chIndex) {
+    const r = resume; resume = null;
+    prog = { seq: r.seq, tries: 0, token: ++token, live: false, vid: r.vid, seeked: false, pinned: r.pinned };
+    shapeFor(r.vid);
+    player.loadVideoById({ videoId: r.vid, startSeconds: r.t });
+    if (muted) player.mute(); else player.unMute();
+    return;
+  }
+  resume = null;
+  if (started) tune(chIndex, true);
+}
+// iPhone/iPad: Safari can keep drawing the video while YouTube's buttons on top of it stop being redrawn,
+// so the pause button from the moment the show started stays on the picture after YouTube has hidden it.
+// Changing the frame's size by a pixel for one frame makes Safari draw YouTube's player afresh.
+function repaintPlayer() {
+  const f = $('player');
+  if (!f || f.tagName !== 'IFRAME') return;
+  const w = f.style.width;
+  f.style.transform = 'translateZ(0)';
+  f.style.width = (parseFloat(w) + 1) + 'px';
+  void f.offsetWidth;
+  requestAnimationFrame(() => requestAnimationFrame(() => { f.style.width = w; f.style.transform = ''; }));
+}
+const PHONE = () => IOS && !IN_APP;
+function onStateChange(e) {
+  const s = e.data;
+  if (cueWaiter && (s === YT.PlayerState.CUED || s === YT.PlayerState.UNSTARTED)) { cueWaiter(); return; }
+  if (!prog || prog.token !== token) return;
+  dbg('state ' + s + (prog.vid ? ' ' + prog.vid : ''));
+  if (PHONE()) setTimeout(repaintPlayer, 500);
+  if (s === YT.PlayerState.PLAYING) {
+    if (IOS) tapDone();
+    hideNotice();
+    setPaused(false);
+    if (!prog.seeked) {
+      const d = player.getDuration() || 0;
+      const data = player.getVideoData ? player.getVideoData() : {};
+      if (d < minLenFor(CHANNELS[chIndex]) || (data && data.isLive)) { markBad(prog.vid); return next(prog.live); }   // tuning screen stays up while skipping
+      prog.seeked = true;
+      const my = prog.token, vid = prog.vid;
+      if (!ccOn) {
+        captionsOff();
+        setTimeout(() => { if (prog && prog.vid === vid && !ccOn) captionsOff(); }, 1500);
+        setTimeout(() => { if (prog && prog.vid === vid && !ccOn) captionsOff(); }, 4000);
+      }
+      if (prog.live && liveJump) player.seekTo(liveOffset(d), true);   // jumping past a creator's ad break plays that ad
+      showInfo();
+      prog.revealAt = Date.now() + REVEAL_DELAY;
+      setTimeout(() => { if (prog && prog.token === my && prog.vid === vid) reveal(); }, REVEAL_DELAY);
+      if (PHONE()) [REVEAL_DELAY + 800, REVEAL_DELAY + 4000, REVEAL_DELAY + 10000].forEach((ms) =>
+        setTimeout(() => { if (prog && prog.vid === vid) repaintPlayer(); }, ms));
+    } else if (!prog.revealAt || Date.now() >= prog.revealAt) reveal();
+  } else if (s === YT.PlayerState.PAUSED) {
+    setPaused(true);
+  } else if (s === YT.PlayerState.ENDED) {
+    next(false);                                     // straight on to the next show: no "more videos" screen
+  }
+}
+// in the Samsung app, what YouTube says goes to the app's log
+const smmLog = (m) => { dbg(m); if (window.bsoTizen && window.bsoTizen.on) window.bsoTizen.tell('log', { msg: '[SMM] ' + m }); };
+function onError(e) {
+  const code = e && e.data;
+  smmLog('youtube error ' + code + (prog && prog.vid ? ' on ' + prog.vid : '') + (cueWaiter ? ' (loading a list)' : ''));
+  if (cueWaiter) { cueWaiter(); return; }
+  if (!prog || prog.token !== token) return;
+  if (PERMANENT_ERR[code]) markBad(prog.vid);
+  else if (IOS) { needTap(); return; }           // Safari blocked it: the video itself is fine
+  else skipped.add(prog.vid);
+  next(prog.live);
+}
+function markBad(v) { if (!v) return; bad.add(v); store.set('bad', [...bad].slice(-400)); }
+
+function cueList(list, wait) {
+  // Ask the player for a playlist; it hands back the video ids it can see. Only trust the answer once
+  // the player says it holds this exact list (a failed load can leave the previous list behind).
+  return new Promise((resolve) => {
+    const t0 = Date.now(), limit = wait || 9000;
+    let done = false, poll = 0;
+    const finish = (ids) => { if (done) return; done = true; clearInterval(poll); cueWaiter = null; smmLog('list ' + list + ': ' + ids.length + ' videos'); resolve(ids); };
+    poll = setInterval(() => {
+      const same = !player.getPlaylistId || player.getPlaylistId() === list;
+      const ids = same && player.getPlaylist ? (player.getPlaylist() || []) : [];
+      const waited = Date.now() - t0;
+      if (ids.length) finish(ids);
+      else if (waited > limit || (same && waited > 3000 && player.getPlayerState() === YT.PlayerState.CUED)) finish([]);
+    }, 250);
+    cueWaiter = () => {};     // swallow the player's cue/error events while the list loads
+    player.cuePlaylist({ listType: 'playlist', list: list, index: 0 });
+  });
+}
+async function cueUploads(ch) {
+  if (ch.list) return cueList(ch.list);                          // a show playlist
+  const ids = await cueList('UULF' + ch.id.slice(2), 5000);      // creator's long videos only (no Shorts)
+  return ids.length ? ids : cueList('UU' + ch.id.slice(2));      // or all their uploads
+}
+async function idsFor(ch) {
+  if (ch.ids) return ch.ids;
+  if (playlists.has(ch.id)) return playlists.get(ch.id);
+  let ids;
+  if (ch.mix) {
+    // Each creator gets an equal share of airtime: a smaller library is repeated to match the biggest one.
+    const lists = [];
+    for (const id of ch.mix) { const l = await idsFor({ id: id }); if (l.length) lists.push(l); }
+    const most = Math.max.apply(null, [0].concat(lists.map((l) => l.length)));
+    ids = [];
+    for (const l of lists) for (let i = 0; i < most; i++) ids.push(l[i % l.length]);
+  } else {
+    const cached = store.get('lf:' + ch.id, null);
+    if (cached && Date.now() - cached.t < 12 * 3600000 && cached.ids.length) { playlists.set(ch.id, cached.ids); return cached.ids; }
+    ids = await cueUploads(ch);
+    if (ids.length) store.set('lf:' + ch.id, { t: Date.now(), ids: ids });
+  }
+  if (ids.length) playlists.set(ch.id, ids);
+  return ids;
+}
+
+/* ---------- commercial breaks ---------- */
+// The ad still plays inside YouTube's player (a page can't block it); Saturday Morning Mode covers it
+// with its own slate and mutes it, then brings the show back when the ad ends.
+// Ads often come in pairs, so the slate waits a moment before dropping, to skip a flash between them.
+let adOn = false, adFailsafe = 0, adOffTimer = 0;
+function adBreak(on, now) {
+  if (on && !adOn) dbg('ad starting' + (coverAds ? ' (cover on)' : ' (cover off)'));
+  if (!on && adOn) dbg('ad over');
+  if (on && !coverAds) return;               // cover turned off in the grown-up settings: ads show as YouTube plays them
+  clearTimeout(adOffTimer);
+  if (!on && adOn && !now) { adOffTimer = setTimeout(() => adBreak(false, true), 800); return; }
+  if (on === adOn) return;
+  adOn = on;
+  clearTimeout(adFailsafe);
+  if (on) {
+    els.abCh.textContent = 'Back to channel ' + (chIndex + 1) + ', ' + CHANNELS[chIndex].name + ', in a moment';
+    els.stat.classList.remove('on');           // the slate replaces the tuning screen
+    clearTimeout(bannerTimer); els.banner.classList.add('hide'); els.hint.classList.add('hide'); document.body.classList.remove('ui');   // the slate has the screen to itself
+    els.ad.classList.add('on');
+    if (player && player.mute) player.mute();
+    adFailsafe = setTimeout(() => { dbg('cover up 90 s: taking it down'); adBreak(false, true); }, 90000);   // never leave the slate stuck up
+  } else {
+    if (prog && prog.token === token && !prog.seeked) els.stat.classList.add('on');   // show starts behind the tuning screen
+    els.ad.classList.remove('on');
+    if (player && player.unMute && !muted) player.unMute();
+  }
+}
+
+/* ---------- tuning ---------- */
+async function tune(i, quiet) {
+  if (!CHANNELS.length) { els.stat.classList.add('on'); els.tuning.textContent = ''; showNotice(NO_CHANNELS[0], NO_CHANNELS[1]); return; }
+  i = (i + CHANNELS.length) % CHANNELS.length;
+  if (i !== chIndex) prevIndex = chIndex;
+  chIndex = i; store.set('last', i);
+  const ch = CHANNELS[i], my = ++token;
+  hideNotice(); adBreak(false, true);
+  dbg('tuning ' + (i + 1) + ' ' + ch.name);
+  els.stat.classList.add('on'); els.tuning.textContent = 'Tuning channel ' + (i + 1) + '…';
+  setBanner(ch, '', true);
+  if (!quiet) showBanner();
+  renderGuide();
+  if (LOCAL) { els.tuning.textContent = ''; showNotice(NEED_LINK[0], NEED_LINK[1]); return; }
+  if (ytBlocked) { els.tuning.textContent = ''; showNotice(NO_YT[0], NO_YT[1]); return; }
+  // If nothing is on screen after 20 s, say so instead of tuning forever.
+  clearTimeout(watchdog);
+  watchdog = setTimeout(() => {
+    if (my !== token || !els.stat.classList.contains('on') || !els.notice.hidden) return;
+    els.tuning.textContent = '';
+    if (ytBlocked || !apiReady || !player || !player.cuePlaylist) showNotice(NO_YT[0], NO_YT[1]);
+    else showNotice('Still tuning ' + ch.name, 'YouTube isn\'t answering. Check the internet connection, or press ▲ or ▼ for another channel.');
+  }, 20000);
+  if (!apiReady || !player || !player.cuePlaylist) return;      // onReady will tune once the player exists
+  const ids = await idsFor(ch);
+  if (my !== token) return;
+  if (!ids.length) { unavailable(ch); return; }
+  prog = { seq: 0, tries: 0, token: my, live: true };
+  play(ch, ids, true);
+}
+function play(ch, ids, live) {
+  const vid = pickVideo(ch, ids, prog.seq);
+  prog.vid = vid; prog.seeked = false; prog.live = live; prog.pinned = false;
+  adBreak(false, true);
+  shapeFor(vid);
+  player.loadVideoById({ videoId: vid });
+  if (muted) player.mute(); else player.unMute();
+  dbg('load ' + ch.name + ' ' + vid);
+  if (IOS) {
+    const my = prog.token, v = vid;
+    setTimeout(() => {
+      if (!prog || prog.token !== my || prog.vid !== v || !player || !player.getPlayerState) return;
+      const st = player.getPlayerState();
+      if (st !== YT.PlayerState.PLAYING && st !== YT.PlayerState.BUFFERING) needTap();
+    }, unlocked ? 6000 : 3500);
+  }
+}
+// Safari wouldn't start the video: show YouTube's own player and let the next tap land on it.
+function needTap() {
+  if (document.body.classList.contains('tapyt')) { document.body.classList.remove('tapgo'); return; }
+  dbg('needs a tap on the player');
+  unlocked = false;
+  els.stat.classList.remove('on'); hideNotice(); clearTimeout(watchdog);
+  document.body.classList.add('tapyt');
+}
+// The video started from the tap. Keep the tap going to YouTube a moment longer: if the page takes the screen
+// back while the finger is still down, YouTube never sees the tap end and its pause button stays on the picture.
+function tapDone() {
+  unlocked = true;
+  const b = document.body;
+  if (!b.classList.contains('tapyt') || b.classList.contains('tapgo')) return;
+  b.classList.add('tapgo');                    // the "tap the video" note goes now
+  dbg('tap worked');
+  setTimeout(() => { b.classList.remove('tapyt'); b.classList.remove('tapgo'); }, 3000);
+}
+function next(live) {
+  const ch = CHANNELS[chIndex], ids = ch.ids || playlists.get(ch.id) || [];
+  if (!prog || !ids.length) return;
+  prog.seq++; prog.tries++;
+  if (prog.tries > MAX_TRIES) { unavailable(ch); return; }
+  play(ch, ids, live);
+}
+function unavailable(ch) {
+  smmLog('off the air: ' + ch.name);
+  els.stat.classList.add('on'); els.tuning.textContent = '';
+  showNotice(ch.name + ' is off the air', 'YouTube wouldn\'t play this channel\'s videos here. Press ▲ or ▼ for another channel.');
+}
+// Start over: play the current video from the top and keep it on until it ends (the hourly
+// schedule change skips a restarted video). Flipping away and back returns to live.
+function restart() {
+  if (!player || !player.seekTo || !prog || !prog.seeked || prog.token !== token || adOn) { showBanner(); return; }
+  prog.pinned = true; prog.live = false;
+  player.seekTo(0, true); player.playVideo();
+  showInfo();
+}
+// Top of the hour, with "Jump in mid-show" on: every channel rolls to its next show, like a TV schedule.
+// With it off (the default, shows start from the top), the show on now plays to its end first.
+let lastHour = hourNow();
+setInterval(() => {
+  const h = hourNow();
+  if (h !== lastHour && liveJump && started && prog && !prog.pinned) { lastHour = h; prog.seq = -1; next(false); prog.tries = 0; }
+  lastHour = h;
+  if (!els.banner.classList.contains('hide')) updateProgress();
+}, 1000);
+
+/* ---------- banner ---------- */
+// state: true = Live, false = Paused, 'start' = From the start (Start over pressed)
+function setBanner(ch, title, state) {
+  els.num.textContent = chIndex + 1;
+  els.bubble.className = 'ch-num p-' + paintOf(chIndex);
+  els.name.textContent = ch.name;
+  els.title.textContent = title || ' ';
+  els.live.className = 'live' + (state === 'start' ? ' start' : state ? '' : ' off');
+  els.live.textContent = state === 'start' ? 'From the start' : state ? 'Live' : 'Paused';
+}
+const playingBadge = () => (prog && prog.pinned ? 'start' : true);
+function showInfo() {
+  const data = player.getVideoData ? player.getVideoData() : {};
+  setBanner(CHANNELS[chIndex], data && data.title, playingBadge());
+  updateProgress();
+  showBanner();
+}
+function updateProgress() {
+  if (!player || !player.getDuration) return;
+  const on = !!(prog && prog.token === token && prog.seeked);     // while tuning, the last show's times would be wrong
+  const d = on ? player.getDuration() || 0 : 0, c = on && player.getCurrentTime ? player.getCurrentTime() : 0;
+  els.cur.textContent = fmt(c); els.dur.textContent = fmt(d);
+  els.bar.style.width = d ? (c / d * 100).toFixed(2) + '%' : '0%';
+}
+let bannerTimer = 0;
+function showBanner() {
+  els.banner.classList.remove('hide'); els.hint.classList.remove('hide'); document.body.classList.add('ui');
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(() => { if (!guideOpen) { els.banner.classList.add('hide'); els.hint.classList.add('hide'); document.body.classList.remove('ui'); } }, 6000);
+}
+function showNotice(t, x) { els.nTitle.textContent = t; els.nText.textContent = x; els.notice.hidden = false; }
+function hideNotice() { els.notice.hidden = true; }
+function setPaused(p) {
+  els.pause.classList.toggle('paused', p);
+  els.pause.setAttribute('aria-label', p ? 'Play' : 'Pause');
+}
+
+/* ---------- guide ---------- */
+// Channels first, then the grown-ups row; the settings below it only show once the question is answered.
+const LOCK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg>';
+function buildGuide() {
+  CHANNELS.forEach((ch, i) => {
+    const b = document.createElement('button');
+    b.className = 'row p-' + paintOf(i); b.type = 'button'; b.dataset.kind = 'ch'; b.dataset.i = i;
+    b.innerHTML = '<span class="n"></span><span class="t"></span>';
+    b.querySelector('.n').textContent = i + 1;
+    b.querySelector('.t').textContent = ch.name;
+    b.addEventListener('click', () => { closeGuide(); start(); tune(i); });
+    els.list.appendChild(b);
+  });
+  const g = document.createElement('button');
+  g.className = 'row grown p-white'; g.type = 'button'; g.dataset.kind = 'gate';
+  g.innerHTML = '<span class="n">' + LOCK_ICON + '</span><span class="t"></span>';
+  g.addEventListener('click', () => { if (grownUps) lockSettings(); else openGate(); });
+  els.list.appendChild(g);
+  els.gateRow = g;
+  SETTINGS.forEach((st, j) => {
+    const b = document.createElement('button');
+    b.className = 'row setting'; b.type = 'button'; b.dataset.kind = 'set'; b.dataset.i = j; b.dataset.setting = st.key; b.hidden = true;
+    b.innerHTML = '<span class="n"></span><span class="t"></span><span class="state"></span>';
+    b.querySelector('.n').textContent = st.tag;
+    b.querySelector('.t').textContent = st.label;
+    b.addEventListener('click', st.toggle);
+    els.list.appendChild(b);
+  });
+  setSettingLabels();
+}
+const guideRows = () => [...els.list.children].filter((b) => !b.hidden);
+function renderGuide() {
+  if (!els.list.children.length) buildGuide();
+  els.gateRow.querySelector('.t').textContent = grownUps ? 'Hide the grown-up settings' : 'Grown-ups';
+  [...els.list.querySelectorAll('.setting')].forEach((b) => { b.hidden = !grownUps; });
+  const rows = guideRows();
+  guideCursor = Math.min(Math.max(0, guideCursor), rows.length - 1);
+  rows.forEach((b, i) => {
+    b.classList.toggle('cursor', guideOpen && i === guideCursor);
+    let now = b.querySelector('.now');
+    const on = b.dataset.kind === 'ch' && +b.dataset.i === chIndex;
+    if (on && !now) { now = document.createElement('span'); now.className = 'now'; now.textContent = 'On now'; b.appendChild(now); }
+    if (!on && now) now.remove();
+  });
+  const c = rows[guideOpen ? guideCursor : chIndex];
+  if (c) (window.bsoScrollTo || ((el) => el.scrollIntoView(false)))(c);
+}
+function openGuide() { guideOpen = true; guideCursor = chIndex; els.guide.classList.add('open'); document.body.classList.add('guiding'); renderGuide(); showBanner(); }
+function closeGuide() { guideOpen = false; grownUps = false; closeGate(); els.guide.classList.remove('open'); document.body.classList.remove('guiding'); renderGuide(); }
+function chooseRow(b) {
+  if (!b) return;
+  if (b.dataset.kind === 'ch') { closeGuide(); tune(+b.dataset.i); }
+  else if (b.dataset.kind === 'gate') { if (grownUps) lockSettings(); else openGate(); }
+  else if (b.dataset.kind === 'set') SETTINGS[+b.dataset.i].toggle();
+}
+function lockSettings() { grownUps = false; guideCursor = guideRows().indexOf(els.gateRow); renderGuide(); }
+
+/* ---------- grown-ups question ---------- */
+// A times-table question with four big answers: easy for a grown-up with the remote, a wall for little kids.
+function askQuestion() {
+  const a = 6 + Math.floor(Math.random() * 4), b = 6 + Math.floor(Math.random() * 4);
+  gateAnswer = a * b;
+  const opts = [gateAnswer];
+  while (opts.length < 4) {
+    const wrong = gateAnswer + (Math.random() < 0.5 ? -1 : 1) * (Math.random() < 0.5 ? a : 1 + Math.floor(Math.random() * 6));
+    if (wrong > 0 && opts.indexOf(wrong) < 0) opts.push(wrong);
+  }
+  for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = opts[i]; opts[i] = opts[j]; opts[j] = t; }
+  els.gateQ.textContent = 'What is ' + a + ' × ' + b + '?';
+  els.gateA.innerHTML = '';
+  opts.forEach((v, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'p-' + ['red', 'blue', 'green', 'white'][i]; btn.textContent = v;
+    btn.addEventListener('click', (e) => { e.stopPropagation(); answer(v); });
+    els.gateA.appendChild(btn);
+  });
+  gateCursor = 0; renderGate();
+}
+function renderGate() { [...els.gateA.children].forEach((b, i) => b.classList.toggle('cursor', i === gateCursor)); }
+function openGate() {
+  gateOpen = true; els.gate.hidden = false;
+  els.gateNote.textContent = TOUCH && !IN_APP ? 'Tap the answer to open the settings.' : 'Pick the answer with ◀ ▶ and press OK to open the settings.';
+  askQuestion();
+}
+function closeGate() { gateOpen = false; els.gate.hidden = true; }
+function answer(v) {
+  if (v === gateAnswer) {
+    closeGate(); grownUps = true; renderGuide();
+    guideCursor = guideRows().indexOf(els.gateRow) + 1; renderGuide();
+    return;
+  }
+  els.gateNote.textContent = 'That isn\'t it. Here\'s a new one.';
+  els.gateCard.classList.remove('shake'); void els.gateCard.offsetWidth; els.gateCard.classList.add('shake');
+  askQuestion();
+}
+els.gate.addEventListener('click', (e) => { if (e.target === els.gate) closeGate(); });
+
+/* ---------- start (needs one press/tap so the browser allows sound) ---------- */
+if (TOUCH && !IN_APP) {
+  window.addEventListener('blur', () => { if (started) { setTimeout(repaintPlayer, 600); setTimeout(repaintPlayer, 4000); } });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && started) setTimeout(repaintPlayer, 800); });
+  els.tuneIn.innerHTML = 'Tap to tune in';
+}
+function goFullscreen() {
+  if (IN_APP) return;                                  // the app is already full screen
+  const el = document.documentElement;
+  if (document.fullscreenElement || document.webkitFullscreenElement) return;
+  const req = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (!req) return;                                    // e.g. iPhone Safari: no page fullscreen
+  try { const r = req.call(el, { navigationUI: 'hide' }); if (r && r.catch) r.catch(() => {}); } catch (e) { /* not allowed here */ }
+}
+function start() {
+  if (started) return;
+  goFullscreen();
+  started = true;
+  els.boot.hidden = true;
+  tune(chIndex);           // shows the tuning screen; plays now, or once the player is ready
+}
+els.tuneIn.addEventListener('click', start);
+els.boot.addEventListener('click', start);   // a tap anywhere on the boot screen tunes in
+// The app needs no "press OK": it tunes in once the logo has played.
+if (IN_APP) setTimeout(start, 2800);
+// The remote's Back button (Samsung app): close the question, then the guide; otherwise the app goes back home.
+window.bsoBack = () => { if (gateOpen) { closeGate(); return true; } if (guideOpen) { closeGuide(); return true; } return false; };
+window.bsoResume = () => { if (started && player && player.playVideo) { player.playVideo(); showBanner(); } };
+// what the TV-engine test reads
+window.bsoProbe = () => {
+  let st = null, t = null, title = null;
+  try { st = player && player.getPlayerState ? player.getPlayerState() : null; t = player && player.getCurrentTime ? Math.round(player.getCurrentTime()) : null; title = player && player.getVideoData ? player.getVideoData().title : null; } catch (e) { st = 'err ' + e.message; }
+  return { page: 'smm', started: started, channel: chIndex + 1, name: CHANNELS[chIndex] && CHANNELS[chIndex].name, state: st, time: t, title: title, adbreak: adOn, guide: guideOpen, gate: gateOpen, grownUps: grownUps, notice: els.notice.hidden ? null : els.nTitle.textContent };
+};
+
+/* ---------- remote / keyboard ---------- */
+let numBuf = '', numTimer = 0;
+function typeNumber(d) {
+  numBuf = (numBuf + d).slice(-2);
+  els.numentry.textContent = numBuf; els.numentry.hidden = false;
+  clearTimeout(numTimer);
+  numTimer = setTimeout(() => {
+    const n = parseInt(numBuf, 10); numBuf = ''; els.numentry.hidden = true;
+    if (n >= 1 && n <= CHANNELS.length) tune(n - 1);
+  }, 1300);
+}
+function togglePause() {
+  if (!player || !player.getPlayerState) return;
+  if (player.getPlayerState() === YT.PlayerState.PLAYING) { player.pauseVideo(); setPaused(true); setBanner(CHANNELS[chIndex], els.title.textContent, false); }
+  else { player.playVideo(); setPaused(false); setBanner(CHANNELS[chIndex], els.title.textContent, playingBadge()); }
+  showBanner();
+}
+// Grown-up settings at the bottom of the guide, so the TV remote can reach them (▼ past the channels, OK).
+const SETTINGS = [
+  { key: 'cc', tag: 'CC', label: 'Captions', get: () => ccOn, on: 'On', off: 'Off', toggle: () => toggleCaptions() },
+  { key: 'fill', tag: '▣', label: 'Picture', get: () => fillOn, on: 'Fill', off: 'Fit', toggle: () => toggleFill() },
+  { key: 'live', tag: '⏱', label: 'Jump in mid-show (more ads)', get: () => liveJump, on: 'On', off: 'Off',
+    toggle: () => { liveJump = !liveJump; store.set('live', liveJump); setSettingLabels(); showBanner(); } },
+  { key: 'cover', tag: 'Ad', label: 'Cover commercials', get: () => coverAds, on: 'On', off: 'Off',
+    toggle: () => { coverAds = !coverAds; store.set('cover', coverAds); if (!coverAds) adBreak(false, true); setSettingLabels(); showBanner(); } },
+  { key: 'debug', tag: '?', label: 'Show what YouTube says', get: () => DEBUG, on: 'On', off: 'Off',
+    toggle: () => { DEBUG = !DEBUG; store.set('debug', DEBUG); const el = document.getElementById('dbg'); if (el) el.hidden = !DEBUG; if (DEBUG) dbg('showing what YouTube says'); setSettingLabels(); } },
+];
+if (!IN_APP) SETTINGS.push({ key: 'yt', tag: 'YT', label: 'Sign in to YouTube Premium (no ads)', get: () => false, on: '', off: 'Open',
+  toggle: () => { window.open('https://accounts.google.com/ServiceLogin?service=youtube&continue=' + encodeURIComponent('https://www.youtube.com/'), '_blank'); } });
+function setSettingLabels() {
+  SETTINGS.forEach((st) => {
+    const el = els.list.querySelector('[data-setting="' + st.key + '"] .state');
+    if (el) { el.textContent = st.get() ? st.on : st.off; el.classList.toggle('on', !!st.get()); }
+  });
+}
+function toggleFill() { fillOn = !fillOn; store.set('fill', fillOn); setSettingLabels(); fitStage(); showBanner(); }
+function toggleCaptions() {
+  ccOn = !ccOn; store.set('cc', ccOn); setSettingLabels(); showBanner();
+  if (!player || !apiReady) return;
+  if (prog && prog.seeked && prog.token === token && player.getCurrentTime) {
+    resume = { ch: chIndex, vid: prog.vid, t: Math.max(0, player.getCurrentTime() - 1), seq: prog.seq, pinned: !!prog.pinned };
+  }
+  token++;                                   // ignore anything the old player still reports
+  unlocked = false;                          // a new player needs its own tap on iPad/iPhone
+  try { player.destroy(); } catch (e) { /* already gone */ }
+  player = null; adBreak(false, true);
+  if (!$('player')) { const d = document.createElement('div'); d.id = 'player'; $('stage').appendChild(d); }
+  fitStage();
+  if (started) { els.stat.classList.add('on'); els.tuning.textContent = ccOn ? 'Captions on' : 'Captions off'; }
+  makePlayer();                              // onReady picks the show back up
+}
+function toggleSound() {
+  if (!player) return;
+  muted = !muted;
+  if (muted) player.mute(); else if (!adOn) player.unMute();
+  els.sound.textContent = muted ? 'Sound on' : 'Mute';
+  showBanner();
+}
+const keyName = window.bsoKey || ((e) => e.key);
+window.addEventListener('keydown', (e) => {
+  const k = keyName(e), code = e.keyCode;
+  if (started && (k === 'Enter' || code === 23)) goFullscreen();
+  if (!started) {
+    if (k === 'Enter' || k === ' ' || k === 'MediaPlayPause' || k === 'MediaPlay' || code === 23 || code === 179) { e.preventDefault(); start(); }
+    return;
+  }
+  if (gateOpen) {
+    const n = els.gateA.children.length;
+    if (k === 'ArrowLeft' || k === 'ArrowUp') gateCursor = (gateCursor + n - 1) % n;
+    else if (k === 'ArrowRight' || k === 'ArrowDown') gateCursor = (gateCursor + 1) % n;
+    else if (k === 'Enter' || k === ' ' || code === 23) { const b = els.gateA.children[gateCursor]; if (b) answer(+b.textContent); }
+    else if (k === 'Escape' || k === 'Backspace' || k === 'GoBack' || code === 4) closeGate();
+    else return;
+    e.preventDefault(); renderGate(); return;
+  }
+  if (guideOpen) {
+    const rows = guideRows();
+    if (k === 'ArrowUp') guideCursor = Math.max(0, guideCursor - 1);
+    else if (k === 'ArrowDown') guideCursor = Math.min(rows.length - 1, guideCursor + 1);
+    else if (k === 'Enter' || k === ' ' || code === 23) chooseRow(rows[guideCursor]);
+    else if (k === 'ArrowLeft' || k === 'Escape' || k === 'Backspace' || k === 'GoBack' || k === 'ChannelList' || k === 'Guide' || code === 4) closeGuide();
+    else return;
+    e.preventDefault(); if (guideOpen) renderGuide(); return;
+  }
+  if (k === 'ArrowUp' || k === 'PageUp' || k === 'ChannelUp' || code === 166) tune(chIndex + 1);
+  else if (k === 'ArrowDown' || k === 'PageDown' || k === 'ChannelDown' || code === 167) tune(chIndex - 1);
+  else if (k === 'Enter' || k === ' ' || k === 'ChannelList' || k === 'Guide' || k === 'ColorF3Blue' || code === 23) openGuide();
+  else if (k === 'ArrowLeft' || k === 'PreviousChannel') tune(prevIndex);
+  else if (k === 'ArrowRight' || k === 'r' || k === 'ColorF2Yellow' || k === 'MediaTrackPrevious') restart();
+  else if (k === 'i' || k === 'Info') { if (prog && prog.seeked) showInfo(); else showBanner(); }
+  else if (k === 'MediaPlayPause' || code === 179 || k === 'p') togglePause();
+  else if (k === 'MediaPlay' || k === 'MediaPause') { if ((player && player.getPlayerState && player.getPlayerState() === YT.PlayerState.PLAYING) === (k === 'MediaPause')) togglePause(); }
+  else if (k === 'MediaTrackNext') tune(chIndex + 1);
+  else if (k === 'MediaFastForward' || code === 228) { if (player && player.seekTo) { player.seekTo(player.getCurrentTime() + 30, true); showBanner(); } }
+  else if (k === 'MediaRewind' || code === 227) { if (player && player.seekTo) { player.seekTo(Math.max(0, player.getCurrentTime() - 30), true); showBanner(); } }
+  else if (k === 'm') toggleSound();
+  else if (k === 'c' || k === 'Caption' || k === 'ColorF0Red') toggleCaptions();
+  else if (k === 'z' || k === 'ColorF1Green' || k === 'PictureSize') toggleFill();
+  else if (/^[0-9]$/.test(k)) typeNumber(k);
+  else return;
+  e.preventDefault();
+});
+
+/* ---------- touch / mouse ---------- */
+// Swipe up or down to change the channel; a tap brings up the banner (its buttons do the rest).
+const touch = $('touch');
+let ty = null, tx = null;
+touch.addEventListener('pointerdown', (e) => { ty = e.clientY; tx = e.clientX; });
+touch.addEventListener('pointerup', (e) => {
+  if (!started) { start(); return; }
+  if (ty == null) return;
+  const dy = e.clientY - ty, dx = e.clientX - tx; ty = tx = null;
+  if (Math.abs(dy) > 60 && Math.abs(dy) > Math.abs(dx)) tune(chIndex + (dy < 0 ? 1 : -1));
+  else if (guideOpen) closeGuide();
+  else showBanner();
+});
+touch.addEventListener('wheel', (e) => { if (!started) return; e.preventDefault(); clearTimeout(touch._w); touch._w = setTimeout(() => tune(chIndex + (e.deltaY < 0 ? 1 : -1)), 120); }, { passive: false });
+touch.addEventListener('contextmenu', (e) => e.preventDefault());
+$('btn-up').addEventListener('click', () => tune(chIndex + 1));
+$('btn-down').addEventListener('click', () => tune(chIndex - 1));
+els.pause.addEventListener('click', togglePause);
+$('btn-restart').addEventListener('click', restart);
+$('btn-guide').addEventListener('click', () => (guideOpen ? closeGuide() : openGuide()));
+els.sound.addEventListener('click', toggleSound);
+
+renderGuide();
+const s = document.createElement('script');
+s.src = 'https://www.youtube.com/iframe_api';
+s.onerror = () => { ytBlocked = true; if (started) { els.tuning.textContent = ''; showNotice(NO_YT[0], NO_YT[1]); } };
+if (!LOCAL) document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>

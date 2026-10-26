@@ -55,7 +55,8 @@ On a phone or tablet: swipe up or down to change channel, tap for the buttons.
 
 At the bottom of the guide, **Grown-ups** asks a times-table question with four big answers. Answer it and the
 settings show: captions, picture fill or fit, jump in mid-show, cover commercials, music during commercials,
-and YouTube's debug readout.
+tilt for the marshmallows (phones and iPads; asks for motion access once each time the app opens), and
+YouTube's debug readout.
 They hide again as soon as the guide closes.
 
 ## What's different from BSO TV

@@ -301,7 +301,7 @@ body.touch .hint{display:none}
     <button id="btn-restart" class="wide p-red">Start over</button>
     <button id="btn-guide" class="wide p-yellow">Guide</button>
     <button id="btn-sound" class="wide p-green">Mute</button>
-    <button id="btn-mallow" class="p-white" aria-label="Marshmallows"><svg viewBox="8 12 48 46" aria-hidden="true"><path d="M11 25C10 33 10.5 41 13 46C17 54.5 47 54.5 51 46C53.5 41 54 33 53 25Z" fill="url(#ms-side-pink)" stroke="#1D1230" stroke-width="2.4"/><ellipse cx="32" cy="25" rx="21" ry="8.6" fill="url(#ms-top-pink)" stroke="#1D1230" stroke-width="2.4"/><ellipse cx="25" cy="22.6" rx="6.5" ry="2.3" fill="#fff" opacity=".8"/></svg></button>
+    <button id="btn-mallow" class="p-white" aria-label="Marshmallows"><svg viewBox="9 9 46 46" aria-hidden="true"><path d="M13 19V45A19 7 0 0 0 51 45V19Z" fill="url(#ms-side-pink)" stroke="#1D1230" stroke-width="2.4"/><ellipse cx="32" cy="19" rx="19" ry="7" fill="url(#ms-top-pink)" stroke="#1D1230" stroke-width="2.4"/><ellipse cx="25.5" cy="17" rx="6" ry="2" fill="#fff" opacity=".8"/></svg></button>
   </div>
 </section>
 <div class="hint hide" id="hint"><span class="key">▲ ▼</span>Channels<span class="key">OK</span>Guide<span class="key">◀</span>Last channel<span class="key">▶</span>Start over<span class="key green">●</span>Marshmallows</div>
@@ -1120,6 +1120,8 @@ const SETTINGS = [
   { key: 'debug', tag: '?', label: 'Show what YouTube says', get: () => DEBUG, on: 'On', off: 'Off',
     toggle: () => { DEBUG = !DEBUG; store.set('debug', DEBUG); const el = document.getElementById('dbg'); if (el) el.hidden = !DEBUG; if (DEBUG) dbg('showing what YouTube says'); setSettingLabels(); } },
 ];
+if (TOUCH) SETTINGS.push({ key: 'tilt', tag: '\u21BB', label: 'Tilt moves the marshmallows (asks for motion access)', get: () => tiltOn, on: 'On', off: 'Off',
+  toggle: () => { tiltOn = !tiltOn; store.set('tilt', tiltOn); if (tiltOn) wakeTilt(); else stopTilt(); setSettingLabels(); } });
 if (!IN_APP) SETTINGS.push({ key: 'yt', tag: 'YT', label: 'Sign in to YouTube Premium (no ads)', get: () => false, on: '', off: 'Open',
   toggle: () => { window.open('https://accounts.google.com/ServiceLogin?service=youtube&continue=' + encodeURIComponent('https://www.youtube.com/'), '_blank'); } });
 function setSettingLabels() {
@@ -1221,22 +1223,24 @@ els.sound.addEventListener('click', toggleSound);
 $('btn-mallow').addEventListener('click', dropMallows);
 
 /* ---------- marshmallows ---------- */
-// A handful of soft, puffy marshmallows tumble down, land on the banner (or the bottom of the screen), bump
-// into each other and poof away. On a phone or iPad, tilting the screen tips them around: whichever way is
-// down, that's where they slide and pile up. Drawn and moved only while some are on screen.
+// A handful of soft marshmallows tumble down, bounce and squish on the banner (or the bottom of the screen),
+// bump into each other and poof away after about five seconds. With the grown-up tilt switch on, tilting a
+// phone or iPad tips them around. Drawn and moved only while some are on screen.
 const MALLOW_COLORS = ['pink', 'yellow', 'green', 'orange', 'lavender', 'white'];
 const mallows = [];
 let mallowRaf = 0, mallowLast = 0;
 const mallowSvg = (c) => '<svg viewBox="0 0 64 64" aria-hidden="true">'
-  + '<path d="M11 25C10 33 10.5 41 13 46C17 54.5 47 54.5 51 46C53.5 41 54 33 53 25Z" fill="url(#ms-side-' + c + ')" stroke="url(#ms-edge-' + c + ')" stroke-width="1.4"/>'
-  + '<rect x="17" y="30" width="3.6" height="15" rx="1.8" fill="#fff" opacity=".28"/>'
-  + '<ellipse cx="32" cy="26.4" rx="21" ry="8.4" fill="none" stroke="#fff" stroke-width="2.6" opacity=".45"/>'
-  + '<ellipse cx="32" cy="25" rx="21" ry="8.6" fill="url(#ms-top-' + c + ')"/>'
-  + '<ellipse cx="25" cy="22.6" rx="6.5" ry="2.3" fill="#fff" opacity=".7"/>'
-  + '<g fill="#fff" opacity=".6"><circle cx="38" cy="23" r=".9"/><circle cx="43" cy="27" r=".7"/><circle cx="29" cy="28" r=".6"/>'
-  + '<circle cx="46" cy="38" r=".8"/><circle cx="24" cy="44" r=".7"/><circle cx="36" cy="47" r=".6"/></g></svg>';
-// Tilt: which way is down on the screen, from the device's tilt sensor. Off until the first marshmallow tap
-// (iPhones and iPads only ask for motion permission from a tap); the TV just keeps ordinary gravity.
+  + '<path d="M13 19V45A19 7 0 0 0 51 45V19Z" fill="url(#ms-side-' + c + ')" stroke="url(#ms-edge-' + c + ')" stroke-width="1.2"/>'
+  + '<rect x="18" y="24" width="3.4" height="20" rx="1.7" fill="#fff" opacity=".3"/>'
+  + '<ellipse cx="32" cy="20.3" rx="19" ry="7" fill="none" stroke="#fff" stroke-width="2.4" opacity=".45"/>'
+  + '<ellipse cx="32" cy="19" rx="19" ry="7" fill="url(#ms-top-' + c + ')"/>'
+  + '<ellipse cx="25.5" cy="17" rx="6" ry="2" fill="#fff" opacity=".7"/>'
+  + '<g fill="#fff" opacity=".6"><circle cx="38" cy="17" r=".9"/><circle cx="43" cy="21" r=".7"/><circle cx="29" cy="21.5" r=".6"/>'
+  + '<circle cx="45" cy="34" r=".8"/><circle cx="22" cy="40" r=".7"/><circle cx="35" cy="45" r=".6"/></g></svg>';
+// Tilt (grown-up switch, off unless turned on): which way is down on the screen, from the device's tilt
+// sensor. iPhones and iPads ask for motion access each time the app opens, and only from a tap, so the ask
+// happens on the first marshmallow tap after opening. The TV just keeps ordinary gravity.
+let tiltOn = !!store.get('tilt', false);
 const tilt = { on: false, asked: false, gx: 0, gy: 1 };
 function screenAngle() {
   const so = window.screen && window.screen.orientation;
@@ -1255,7 +1259,7 @@ function onTilt(e) {
   tilt.on = true;
 }
 function wakeTilt() {
-  if (tilt.asked || !TOUCH) return;
+  if (!tiltOn || tilt.asked || !TOUCH) return;
   tilt.asked = true;
   const D = window.DeviceOrientationEvent;
   if (!D) return;
@@ -1265,6 +1269,10 @@ function wakeTilt() {
   if (typeof D.requestPermission === 'function') {
     try { D.requestPermission().then((r) => { if (r === 'granted') listen(); }).catch(() => {}); } catch (e) { /* no prompt here */ }
   }
+}
+function stopTilt() {
+  window.removeEventListener('deviceorientation', onTilt);
+  tilt.on = false; tilt.asked = false; tilt.gx = 0; tilt.gy = 1;
 }
 function dropMallows() {
   wakeTilt();
@@ -1280,22 +1288,28 @@ function dropMallows() {
     document.body.appendChild(el);
     mallows.push({ el: el, size: size, rr: rr, x: rr + Math.random() * (W - rr * 2), y: -rr - Math.random() * H * 0.45,
       vx: (Math.random() - 0.5) * 90, vy: Math.random() * 120, r: Math.random() * 360, vr: (Math.random() - 0.5) * 300,
-      inside: false, born: now, still: 0, gone: 0 });
+      inside: false, born: now, squash: 0, squashT: 0, gone: 0 });
   }
   if (!mallowRaf) { mallowLast = 0; mallowRaf = requestAnimationFrame(stepMallows); }
 }
 // The banner is a solid block: marshmallows land on it, and bounce off its sides or bottom when the screen is
 // tipped. Everything else stops at the edges of the screen.
-function mallowBanner(m, r, bounce) {
+// A soft bounce: a fast landing springs back up and squishes the marshmallow for a moment.
+function mallowHit(m, v, t) {
+  const s = Math.abs(v);
+  if (s > 240) { m.squash = Math.min(0.24, s / 3200); m.squashT = t; }
+  return s > 70 ? -v * 0.6 : 0;
+}
+function mallowBanner(m, r, t) {
   const R = m.rr;
   if (!r || m.x < r.left - R || m.x > r.right + R || m.y < r.top - R || m.y > r.bottom + R) return;
   const top = m.y + R - r.top, bottom = r.bottom - (m.y - R), left = m.x + R - r.left, right = r.right - (m.x - R);
   const least = Math.min(top, bottom, left, right);
   if (least <= 0) return;
-  if (least === top) { m.y = r.top - R; if (m.vy > 0) m.vy = bounce(m.vy); }
-  else if (least === bottom) { m.y = r.bottom + R; if (m.vy < 0) m.vy = bounce(m.vy); }
-  else if (least === left) { m.x = r.left - R; if (m.vx > 0) m.vx = bounce(m.vx); }
-  else { m.x = r.right + R; if (m.vx < 0) m.vx = bounce(m.vx); }
+  if (least === top) { m.y = r.top - R; if (m.vy > 0) m.vy = mallowHit(m, m.vy, t); }
+  else if (least === bottom) { m.y = r.bottom + R; if (m.vy < 0) m.vy = mallowHit(m, m.vy, t); }
+  else if (least === left) { m.x = r.left - R; if (m.vx > 0) m.vx = mallowHit(m, m.vx, t); }
+  else { m.x = r.right + R; if (m.vx < 0) m.vx = mallowHit(m, m.vx, t); }
   m.touch = true;
 }
 function stepMallows(t) {
@@ -1303,7 +1317,6 @@ function stepMallows(t) {
   mallowLast = t;
   const W = window.innerWidth, H = window.innerHeight, G = H * 2.4;
   const shelf = els.banner.classList.contains('hide') ? null : els.banner.getBoundingClientRect();
-  const bounce = (v) => (Math.abs(v) > 140 ? -v * 0.4 : 0);
   for (let i = 0; i < mallows.length; i++) {
     const m = mallows[i];
     if (m.gone) continue;
@@ -1312,11 +1325,11 @@ function stepMallows(t) {
     m.vx += G * gx * dt; m.vy += G * gy * dt;
     m.x += m.vx * dt; m.y += m.vy * dt; m.r += m.vr * dt;
     let touch = false;
-    if (m.x - m.rr < 0) { m.x = m.rr; m.vx = bounce(m.vx); touch = true; }
-    else if (m.x + m.rr > W) { m.x = W - m.rr; m.vx = bounce(m.vx); touch = true; }
-    if (m.y + m.rr > H) { m.y = H - m.rr; m.vy = bounce(m.vy); touch = true; }
+    if (m.x - m.rr < 0) { m.x = m.rr; m.vx = mallowHit(m, m.vx, t); touch = true; }
+    else if (m.x + m.rr > W) { m.x = W - m.rr; m.vx = mallowHit(m, m.vx, t); touch = true; }
+    if (m.y + m.rr > H) { m.y = H - m.rr; m.vy = mallowHit(m, m.vy, t); touch = true; }
     if (!m.inside && m.y - m.rr >= 0) m.inside = true;
-    if (m.inside && m.y - m.rr < 0) { m.y = m.rr; m.vy = bounce(m.vy); touch = true; }
+    if (m.inside && m.y - m.rr < 0) { m.y = m.rr; m.vy = mallowHit(m, m.vy, t); touch = true; }
     m.touch = touch;
   }
   // bump into each other
@@ -1331,11 +1344,11 @@ function stepMallows(t) {
       const d = Math.sqrt(d2), nx = dx / d, ny = dy / d, push = (min - d) / 2;
       a.x -= nx * push; a.y -= ny * push; b.x += nx * push; b.y += ny * push;
       const rel = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
-      if (rel < 0) { const k = -1.15 * rel / 2; a.vx -= k * nx; a.vy -= k * ny; b.vx += k * nx; b.vy += k * ny; }
+      if (rel < 0) { const k = -1.45 * rel / 2; a.vx -= k * nx; a.vy -= k * ny; b.vx += k * nx; b.vy += k * ny; }
       a.touch = b.touch = true;
     }
   }
-  for (let i = 0; i < mallows.length; i++) if (!mallows[i].gone) mallowBanner(mallows[i], shelf, bounce);
+  for (let i = 0; i < mallows.length; i++) if (!mallows[i].gone) mallowBanner(mallows[i], shelf, t);
   for (let i = mallows.length - 1; i >= 0; i--) {
     const m = mallows[i];
     if (!m.gone) {
@@ -1348,18 +1361,19 @@ function stepMallows(t) {
         up += 360 * Math.round((m.r - up) / 360);
         m.r += (up - m.r) * Math.min(1, 6 * dt);
       }
-      const speed = Math.abs(m.vx) + Math.abs(m.vy);
-      if (m.touch && speed < 40) { if (!m.still) m.still = t; } else m.still = 0;
-      const rest = tilt.on ? 3000 : 1100, life = tilt.on ? 12000 : 6000;
-      if ((m.still && t - m.still > rest) || t - m.born > life) m.gone = t;
+      if (t - m.born > 5000) m.gone = t;                     // about five seconds on screen, then poof
     }
-    let fade = 1, grow = 1;
+    let fade = 1, grow = 1, sq = 0;
+    if (m.squash) {                                          // squish, then a little wobble back
+      const e = t - m.squashT;
+      if (e > 600) m.squash = 0; else sq = m.squash * Math.exp(-e / 140) * Math.cos(e / 45);
+    }
     if (m.gone) {
       const k = Math.min(1, (t - m.gone) / 320);
       fade = 1 - k; grow = 1 + 0.4 * k;
       if (k >= 1) { m.el.parentNode.removeChild(m.el); mallows.splice(i, 1); continue; }
     }
-    m.el.style.transform = 'translate(' + (m.x - m.size / 2).toFixed(1) + 'px,' + (m.y - m.size / 2).toFixed(1) + 'px) rotate(' + m.r.toFixed(1) + 'deg) scale(' + grow + ')';
+    m.el.style.transform = 'translate(' + (m.x - m.size / 2).toFixed(1) + 'px,' + (m.y - m.size / 2).toFixed(1) + 'px) rotate(' + m.r.toFixed(1) + 'deg) scale(' + (grow * (1 + sq)).toFixed(3) + ',' + (grow * (1 - sq)).toFixed(3) + ')';
     m.el.style.opacity = fade;
   }
   mallowRaf = mallows.length ? requestAnimationFrame(stepMallows) : 0;

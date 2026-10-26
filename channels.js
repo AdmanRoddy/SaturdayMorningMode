@@ -17,9 +17,8 @@
  * then Share channel > Copy channel ID. It starts with UC.
  *
  * Sources are the show's official channel, or a playlist on a channel run by the studio or its licensed
- * distributor, except Bear in the Big Blue House and Wishbone: nothing official exists, so those two are
- * fan-made playlists and can lose videos over time. Classic Blue's Clues (Steve and Joe) isn't on YouTube
- * officially, so the 2019 Blue's Clues & You! stands in.
+ * distributor, except Bear in the Big Blue House, Blue's Clues and Wishbone: nothing official exists, so
+ * those three are fan-made playlists and can lose videos over time.
  */
 window.SMM_CHANNELS = [
   { name: 'Sesame Street', id: 'UCoookXUzPciGrEZEXmh4Jjg' },
@@ -37,8 +36,8 @@ window.SMM_CHANNELS = [
   { name: 'Reading Rainbow', list: 'PLKjPuuAb_XK9LvO36b0xCCfnh8F8Dy3Rx' },
   // Scholastic's "Magic School Bus Classic" channel: the original 1994–97 series
   { name: 'The Magic School Bus', id: 'UCi7STzPDqcOvmjm7-bEsvDg' },
-  // the 2019 show: Nick Jr. doesn't post the Steve and Joe episodes
-  { name: "Blue's Clues & You!", id: 'UCjZo1E1P6wDDyw6ImVgKM-A' },
+  // fan-made "Nick Jr Blue's Clues Full Episodes!" playlist: Nick Jr. doesn't post the Steve and Joe episodes
+  { name: "Blue's Clues", list: 'PL_OW4ievERkggbW_SHvXWz2QxrD2ivn6F' },
   // Scholastic's classic 2000–03 series, plus Clifford's Puppy Days
   { name: 'Clifford the Big Red Dog', id: 'UCqu9w7Mw14mAUQMzcyV3D4A' },
   // fan-made full-episodes playlist (Bronson B): Mattel hasn't posted the show
@@ -52,9 +51,8 @@ window.SMM_CHANNELS = [
   // PBS KIDS' full episodes and compilations playlist
   { name: "Daniel Tiger's Neighborhood", list: 'PLa8HWWMcQEGT8bMsS9WSyXbvbxm5i8bUW' },
   { name: 'Arthur', id: 'UCSPzXeCRf12qayHCAtuffzw' },
-  // The New Adventures of Winnie the Pooh: full episodes posted on Disney Kids, picked one by one
-  // (that channel carries every Disney show, so its uploads can't be used as a whole)
-  { name: 'Winnie the Pooh', ids: ['Ndl27STt_as', 'JmFiRwntHwc'] },
+  // Disney Kids' own "The New Adventures of Winnie the Pooh" playlist
+  { name: 'Winnie the Pooh', list: 'PLWMhB1nOHzvs' },
   // free full movies from Air Bud Entertainment's own channel (the only ones from the list posted free by their owner)
   { name: 'Saturday Matinee', slate: 'dvd', ids: [
     '1VRVdf71dfo',   // Air Bud

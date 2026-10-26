@@ -56,7 +56,8 @@ window.SMM_CHANNELS = [
     'hTwipCruUpY',   // 1 Hour Of Arthur | Arthur Full Episodes
     'SpnQDPsaK54',   // Arthur Full Episodes (about an hour)
     'H2Qf-mUklnw',   // Arthur Full Episodes (about an hour)
-    'WJQJQrbsuIE'    // Arthur full episode, PBS KIDS
+    'WJQJQrbsuIE',   // Arthur full episode, PBS KIDS
+    'J6Pyoi2mN1c'    // Arthur's First Sleepover / Arthur's New Year's Eve, PBS KIDS
   ] },
   // Disney Kids' own "The New Adventures of Winnie the Pooh" playlist
   { name: 'Winnie the Pooh', list: 'PLWMhB1nOHzvs' },

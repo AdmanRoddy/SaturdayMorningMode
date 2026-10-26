@@ -17,8 +17,8 @@
  * then Share channel > Copy channel ID. It starts with UC.
  *
  * Sources are the show's official channel, or a playlist on a channel run by the studio or its licensed
- * distributor, except Bear in the Big Blue House and Wishbone: nothing official exists, so those two are
- * fan-made playlists and can lose videos over time.
+ * distributor, except Bear in the Big Blue House, Blue's Clues and Wishbone: nothing official exists for
+ * the classic shows, so those three are fan-made playlists and can lose videos over time.
  */
 window.SMM_CHANNELS = [
   { name: 'Sesame Street', id: 'UCoookXUzPciGrEZEXmh4Jjg' },
@@ -36,8 +36,8 @@ window.SMM_CHANNELS = [
   { name: 'Reading Rainbow', list: 'PLKjPuuAb_XK9LvO36b0xCCfnh8F8Dy3Rx' },
   // Scholastic's "Magic School Bus Classic" channel: the original 1994–97 series
   { name: 'The Magic School Bus', id: 'UCi7STzPDqcOvmjm7-bEsvDg' },
-  // Nick Jr.'s official channel for the 2019 show (the Steve and Joe episodes aren't posted officially)
-  { name: "Blue's Clues & You!", id: 'UCjZo1E1P6wDDyw6ImVgKM-A' },
+  // fan-made "Blue's Clues Full Episodes" playlist (Keith Kelly): Nick Jr. doesn't post the classic episodes
+  { name: "Blue's Clues", list: 'PLiaDPpe0DqF6JUZQTSLQwv2RjrJcN3slb' },
   // Scholastic's classic 2000–03 series, plus Clifford's Puppy Days
   { name: 'Clifford the Big Red Dog', id: 'UCqu9w7Mw14mAUQMzcyV3D4A' },
   // fan-made full-episodes playlist (Bronson B): Mattel hasn't posted the show

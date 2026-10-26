@@ -103,13 +103,14 @@ body.guiding .bug{opacity:0} /* the guide has its own */
 .key{display:inline-block;padding:.1rem .65rem;margin:0 .3rem;border:.2rem solid var(--ink);border-radius:.55rem;background:var(--yellow);color:var(--ink);font-weight:700}
 
 /* ---------- tuning: Harlequin color bars between shows ---------- */
-.static{position:fixed;top:0;right:0;bottom:0;left:0;z-index:4;pointer-events:none;opacity:0;transition:opacity .25s ease;overflow:hidden;
+/* Hidden screens are also made invisible once they've faded, so an iPad doesn't keep them in its
+   graphics memory on top of the video all day. Nothing animates while it's hidden. */
+.static{position:fixed;top:0;right:0;bottom:0;left:0;z-index:4;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .25s ease, visibility 0s linear .25s;overflow:hidden;
   background:linear-gradient(90deg,#F2EEF9 0%,#F2EEF9 16.66%,var(--yellow) 16.66%,var(--yellow) 33.33%,var(--green) 33.33%,var(--green) 50%,var(--red) 50%,var(--red) 66.66%,var(--blue) 66.66%,var(--blue) 83.33%,var(--grape) 83.33%,var(--grape) 100%)}
-.static.on{opacity:1}
+.static.on{opacity:1;visibility:visible;transition:opacity .25s ease}
 .static::before{content:'';position:absolute;left:0;right:0;bottom:0;height:24%;background:var(--ink)}
 .static::after{content:'';position:absolute;top:0;right:0;bottom:0;left:0;
-  background:repeating-linear-gradient(0deg,rgba(29,18,48,.16) 0,rgba(29,18,48,.16) 2px,transparent 2px,transparent 6px);animation:roll .5s linear infinite}
-@keyframes roll{to{background-position:0 12px}}
+  background:repeating-linear-gradient(0deg,rgba(29,18,48,.16) 0,rgba(29,18,48,.16) 2px,transparent 2px,transparent 6px)}
 .static .tuning{position:absolute;left:50%;top:40%;z-index:1;padding:1.1rem 2.2rem .6rem;transform:translate(-50%,-50%) rotate(-2deg);border:var(--line) solid var(--ink);border-radius:1.4rem;
   background:var(--white);color:var(--ink);box-shadow:var(--pop) var(--pop) 0 var(--ink);font-size:3.2rem;white-space:nowrap}
 .static .tuning:empty{display:none}
@@ -118,7 +119,7 @@ body.guiding .bug{opacity:0} /* the guide has its own */
 .banner{position:fixed;left:7rem;right:3.5rem;bottom:3rem;z-index:5;display:flex;align-items:center;padding:1.3rem 1.6rem 1.3rem 8.6rem;
   background:var(--blue);border:var(--line) solid var(--ink);border-radius:1.8rem;box-shadow:var(--pop) var(--pop) 0 var(--ink);
   transition:opacity .3s ease, transform .3s ease}
-.banner.hide{opacity:0;transform:translateY(2rem);pointer-events:none}
+.banner.hide{opacity:0;transform:translateY(2rem);pointer-events:none;visibility:hidden;transition:opacity .3s ease, transform .3s ease, visibility 0s linear .3s}
 .ch-num{position:absolute;left:-4rem;top:50%;width:11rem;height:11rem;margin-top:-5.5rem;border-radius:50%;border:var(--line) solid var(--ink);
   box-shadow:.4rem .4rem 0 var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-8deg)}
 .ch-num small{font-size:1.3rem;font-weight:700;line-height:1}
@@ -151,8 +152,9 @@ body.touch .hint{display:none}
 
 /* ---------- guide ---------- */
 .guide{position:fixed;left:0;top:0;bottom:0;width:46rem;max-width:92vw;z-index:8;background:var(--grape);border-right:var(--line) solid var(--ink);overflow:hidden;
-  box-shadow:.6rem 0 0 rgba(29,18,48,.5);display:flex;flex-direction:column;transform:translateX(-106%);transition:transform .32s cubic-bezier(.3,1.25,.5,1)}
-.guide.open{transform:none}
+  box-shadow:.6rem 0 0 rgba(29,18,48,.5);display:flex;flex-direction:column;transform:translateX(-106%);visibility:hidden;
+  transition:transform .32s cubic-bezier(.3,1.25,.5,1), visibility 0s linear .32s}
+.guide.open{transform:none;visibility:visible;transition:transform .32s cubic-bezier(.3,1.25,.5,1)}
 .guide .confetti{opacity:.16}
 .guide header{position:relative;padding:2.4rem 2.4rem 1rem 2.6rem;display:flex;align-items:flex-end;justify-content:space-between}
 .guide header .logo{font-size:2.5rem}
@@ -202,13 +204,14 @@ body.touch .hint{display:none}
 
 /* ---------- commercial break: covers YouTube's ads with a Saturday Morning slate ---------- */
 .adbreak{position:fixed;top:0;right:0;bottom:0;left:0;z-index:4;display:flex;align-items:center;justify-content:center;overflow:hidden;opacity:0;pointer-events:none;
-  background:var(--blue);transition:opacity .3s ease}
-.adbreak.on{opacity:1}
+  background:var(--blue);visibility:hidden;transition:opacity .3s ease, visibility 0s linear .3s}
+.adbreak.on{opacity:1;visibility:visible;transition:opacity .3s ease}
 .ab-inner{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;max-width:86vw}
 .adbreak .logo{font-size:5.6rem}
 .ab-title{margin:3.6rem 0 0;font-size:6.6rem;line-height:1;color:var(--white);text-shadow:.4rem .4rem 0 var(--ink)}
 .ab-dots{display:flex;margin-top:2.2rem}
-.ab-dots i{display:block;width:1.6rem;height:1.6rem;margin:0 .6rem;border:.22rem solid var(--ink);border-radius:50%;animation:hop 1.2s ease-in-out infinite}
+.ab-dots i{display:block;width:1.6rem;height:1.6rem;margin:0 .6rem;border:.22rem solid var(--ink);border-radius:50%}
+.adbreak.on .ab-dots i{animation:hop 1.2s ease-in-out infinite}
 .ab-dots i:nth-child(1){background:var(--red)}
 .ab-dots i:nth-child(2){background:var(--yellow);animation-delay:.15s}
 .ab-dots i:nth-child(3){background:var(--green);animation-delay:.3s}
@@ -218,9 +221,10 @@ body.touch .hint{display:none}
 .ab-note{position:absolute;left:0;right:0;bottom:2.4rem;margin:0;padding:0 2rem;text-align:center;font-size:1.3rem;font-weight:500;color:rgba(255,255,255,.78)}
 
 /* ---------- the DVD-player slate: "Saturday Morning" drifts around a black screen, new paint on every bounce ---------- */
-.dvd{position:fixed;top:0;right:0;bottom:0;left:0;z-index:4;background:#000;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .3s ease}
-.dvd.on{opacity:1}
-.dvd-mover{position:absolute;left:0;top:0;padding:.35em .45em .45em .3em;font-size:4.4rem;will-change:transform}
+.dvd{position:fixed;top:0;right:0;bottom:0;left:0;z-index:4;background:#000;overflow:hidden;opacity:0;pointer-events:none;visibility:hidden;transition:opacity .3s ease, visibility 0s linear .3s}
+.dvd.on{opacity:1;visibility:visible;transition:opacity .3s ease}
+.dvd-mover{position:absolute;left:0;top:0;padding:.35em .45em .45em .3em;font-size:4.4rem}
+.dvd.on .dvd-mover{will-change:transform}
 .dvd .w{transition:background-color .15s ease, color .15s ease}
 .dvd .w:first-child{transform:rotate(-3deg)}
 .dvd .w:last-child{margin:-.1em 0 0 .5em;transform:rotate(2deg)}
@@ -250,7 +254,7 @@ body.touch .hint{display:none}
 @media (prefers-reduced-motion:reduce){
   #boot .w,#boot .confetti,.tune-in{animation:none;opacity:1}
   #boot .confetti{opacity:.5}
-  .static::after,.ab-dots i{animation:none}
+  .adbreak.on .ab-dots i{animation:none}
 }
 </style>
 </head>
@@ -361,8 +365,10 @@ const pad2 = (n) => String(n).padStart(2, '0');
 const fmt = (s) => { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' + pad2(m) : m) + ':' + pad2(x); };
 function hash(str) { let h = 2166136261 >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
 function rand(seed) { let t = (seed + 0x6D2B79F5) >>> 0; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
-const hourNow = () => Math.floor(Date.now() / 3600000);
-const secIntoHour = () => (Date.now() % 3600000) / 1000;
+// The schedule runs in 15-minute slots: tuning in during a slot gives that slot's show.
+const SLOT_MS = 15 * 60000;
+const slotNow = () => Math.floor(Date.now() / SLOT_MS);
+const secIntoSlot = () => (Date.now() % SLOT_MS) / 1000;
 // Same web address as BSO TV (admanroddy.github.io), so everything is kept under its own name.
 const store = {
   get(k, d) { try { const v = localStorage.getItem('smm:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -408,15 +414,17 @@ let grownUps = false;                   // settings shown in the guide (until th
 let gateOpen = false, gateAnswer = 0, gateCursor = 0;
 
 /* ---------- schedule ---------- */
-// Same channel + same hour => same program, so flipping away and back feels like live TV.
+// Same channel + same 15-minute slot => same show, so flipping away and back feels like live TV, and a
+// channel with short videos moves on to something new four times an hour. A new slot never interrupts:
+// whatever is on keeps playing to its end; the next slot's show is what you get on tuning in.
 function pickVideo(ch, ids, seq) {
   const good = ids.filter((v) => !bad.has(v) && !skipped.has(v));
   const pool = good.length ? good : ids;
-  return pool[Math.floor(rand(hash(ch.id + ':' + hourNow() + ':' + seq)) * pool.length)];
+  return pool[Math.floor(rand(hash(ch.id + ':' + slotNow() + ':' + seq)) * pool.length)];
 }
 function liveOffset(dur) {
   const span = Math.max(60, dur - 45);
-  return secIntoHour() % span;
+  return secIntoSlot() % span;
 }
 const minLenFor = (ch) => (ch.min != null ? ch.min : (ch.ids ? 0 : MIN_LEN));
 
@@ -753,23 +761,15 @@ function unavailable(ch) {
   els.stat.classList.add('on'); els.tuning.textContent = '';
   showNotice(ch.name + ' is off the air', 'YouTube wouldn\'t play this channel\'s videos here. Press ▲ or ▼ for another channel.');
 }
-// Start over: play the current video from the top and keep it on until it ends (the hourly
-// schedule change skips a restarted video). Flipping away and back returns to live.
+// Start over: play the current video from the top. Flipping away and back returns to the schedule.
 function restart() {
   if (!player || !player.seekTo || !prog || !prog.seeked || prog.token !== token || adOn) { showBanner(); return; }
   prog.pinned = true; prog.live = false;
   player.seekTo(0, true); player.playVideo();
   showInfo();
 }
-// Top of the hour, with "Jump in mid-show" on: every channel rolls to its next show, like a TV schedule.
-// With it off (the default, shows start from the top), the show on now plays to its end first.
-let lastHour = hourNow();
-setInterval(() => {
-  const h = hourNow();
-  if (h !== lastHour && liveJump && started && prog && !prog.pinned) { lastHour = h; prog.seq = -1; next(false); prog.tries = 0; }
-  lastHour = h;
-  if (!els.banner.classList.contains('hide')) updateProgress();
-}, 1000);
+// The banner's clock. (Nothing here changes the show: a new slot only matters when someone tunes in.)
+setInterval(() => { if (!els.banner.classList.contains('hide')) updateProgress(); }, 1000);
 
 /* ---------- banner ---------- */
 // state: true = Live, false = Paused, 'start' = From the start (Start over pressed)

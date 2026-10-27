@@ -1276,6 +1276,7 @@ function start() {
   if (started) return;
   goFullscreen();
   Lofi.unlock();           // the commercial-break music needs this tap to be allowed to play later
+  if (gamesOn) setTimeout(() => Voice.ensure(), 4000);   // the games' recorded voice list, ready for when they open
   started = true;
   els.boot.hidden = true;
   tune(chIndex);           // shows the tuning screen; plays now, or once the player is ready
@@ -1603,19 +1604,24 @@ window.smmTilt = tilt;   // for testing tilt without a phone
 const gmEls = { root: $('games'), menu: $('gm-menu'), picks: $('gm-picks'), play: $('gm-play'), prompt: $('gm-prompt'), target: $('gm-target'),
   choices: $('gm-choices'), stars: $('gm-stars'), tv: $('gm-tv'), home: $('gm-home'), say: $('gm-say'), btn: $('btn-games'), actor: $('gm-actor'), host: $('gm-host') };
 
-// The voice: the device's own text-to-speech. A new line cuts off the last one (and its follow-up), and if the
-// device never says it finished, a timer carries on, so a game can't get stuck waiting on it.
-// The voice: the device's own text-to-speech. A new line cuts off the last one (and its follow-up), and if the
-// device never says it finished, a timer carries on, so a game can't get stuck waiting on it.
-// It picks the best-sounding voice the device has (Premium and Enhanced voices first), pitched up a little for
-// a cartoon feel. Grown-ups can step through the device's voices and turn the cartoon pitch off in the settings.
+// The voice. Every line the games say is recorded as a little sound clip (voice/, made with the open-source
+// Kokoro voice). Clips play through the same sound chip as the chimes. Mr. Isaac himself doesn't talk.
+// A line without a clip, or a device that can't fetch them, falls back to the device's own text-to-speech.
+// A new line cuts off the last one (and whatever was meant to follow it), and if something never says it's
+// finished, a timer carries on, so a game can't get stuck waiting.
+// Grown-ups can switch to one of the device's voices in the settings (with or without a cartoon pitch).
+const VOICE_V = 1;                             // bump when the clips are re-recorded
 const Voice = (() => {
   const S = window.speechSynthesis, U = window.SpeechSynthesisUtterance;
-  let voice = null, timer = 0, cur = null, all = [], chosen = store.get('voice', '') || '', cartoon = store.get('cartoon', true) !== false;
+  let voice = null, timer = 0, cur = null, src = null, seq = 0, all = [], chosen = store.get('voice', '') || '', cartoon = !!store.get('cartoon', false);
+  const buf = {}, wait = {};
+  let have = null, loading = false;
   const NICE = ['Zoe', 'Ava', 'Evan', 'Allison', 'Nicky', 'Joelle', 'Noelle', 'Samantha', 'Susan', 'Nathan', 'Tom', 'Flo', 'Sandy', 'Shelley', 'Junior',
     'Aria', 'Jenny', 'Ana', 'Michelle', 'Google US English', 'Karen', 'Moira', 'Tessa', 'Serena', 'Kate'];
   const NOVELTY = /^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Pipe Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Deranged|Hysterical|Princess)$/i;
   const base = (v) => (v.name || '').replace(/\s*\(.*\)\s*$/, '').replace(/^Microsoft\s+/, '').replace(/\s+Online.*$/, '');
+  const id = (t) => hash(t).toString(36);
+  const recorded = () => chosen === '' || chosen === 'recorded';
   function score(v) {
     const n = (v.name || '') + ' ' + (v.voiceURI || '');
     let sc = 0;
@@ -1636,39 +1642,105 @@ const Voice = (() => {
   }
   if (S && S.addEventListener) S.addEventListener('voiceschanged', pick);
   pick();
+  // the list of recorded lines (fetched once)
+  function ensure() {
+    if (have || loading) return;
+    loading = true;
+    const sc = document.createElement('script');
+    sc.src = 'voice/lines.js?v=' + VOICE_V;
+    sc.onload = () => { loading = false; have = window.SMM_VOICE || {}; api.preload(['Let\'s play! Pick a game.']); };
+    sc.onerror = () => { loading = false; };
+    document.head.appendChild(sc);
+  }
+  function load(k, cb) {
+    if (buf[k]) { cb(buf[k]); return; }
+    if (wait[k]) { wait[k].push(cb); return; }
+    wait[k] = [cb];
+    const done = (b) => { const w = wait[k] || []; delete wait[k]; if (b) buf[k] = b; w.forEach((f) => f(b)); };
+    const c = Lofi.ctx;
+    if (!c || !window.fetch) { done(null); return; }
+    fetch('voice/' + k + '.mp3?v=' + VOICE_V).then((r) => (r.ok ? r.arrayBuffer() : null)).then((ab) => {
+      if (!ab) { done(null); return; }
+      try { c.decodeAudioData(ab, (b) => done(b), () => done(null)); } catch (e) { done(null); }
+    }).catch(() => done(null));
+  }
+  function tts(text, fin, my) {
+    if (my !== seq) return;
+    if (!S || !U) { cur = null; timer = setTimeout(fin, 600 + text.length * 55); return; }   // no voice here: just keep the pace
+    try {
+      if (S.speaking || S.pending) S.cancel();
+      if (!voice) pick();
+      const u = new U(text);
+      cur = u;
+      if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = 'en-US';
+      u.rate = cartoon ? 0.98 : 0.92; u.pitch = cartoon ? 1.4 : 1.05; u.volume = 1;
+      u.onend = () => { if (cur === u) fin(); };
+      u.onerror = () => { if (cur === u) fin(); };
+      S.speak(u);
+      timer = setTimeout(() => { if (cur === u) fin(); }, 1800 + text.length * 95);
+    } catch (e) { timer = setTimeout(fin, 600); }
+  }
+  function halt() {
+    clearTimeout(timer); cur = null;
+    if (src) { try { src.onended = null; src.stop(); } catch (e) { /* already done */ } src = null; }
+    try { if (S && (S.speaking || S.pending)) S.cancel(); } catch (e) { /* nothing to stop */ }
+  }
   const api = {
-    ok: !!(S && U),
+    // say a line, or several in a row (["Yay!", "That's the star!"]); then done()
     say(text, done) {
-      clearTimeout(timer);
+      halt();
+      const my = ++seq, parts = (Array.isArray(text) ? text : [text]).filter((t) => t);
       let once = done;
-      const fin = () => { clearTimeout(timer); const d = once; once = null; if (d) d(); };
-      if (!text) { timer = setTimeout(fin, 0); return; }
-      if (!S || !U) { cur = null; timer = setTimeout(fin, 600 + text.length * 55); return; }   // no voice here: just keep the pace
-      try {
-        if (S.speaking || S.pending) S.cancel();
-        if (!voice) pick();
-        const u = new U(text);
-        cur = u;
-        if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = 'en-US';
-        u.rate = cartoon ? 0.98 : 0.92; u.pitch = cartoon ? 1.4 : 1.05; u.volume = 1;
-        u.onend = () => { if (cur === u) fin(); };
-        u.onerror = () => { if (cur === u) fin(); };
-        S.speak(u);
-        timer = setTimeout(() => { if (cur === u) fin(); }, 1800 + text.length * 95);
-      } catch (e) { timer = setTimeout(fin, 600); }
+      const fin = () => { clearTimeout(timer); if (my !== seq) return; const d = once; once = null; if (d) d(); };
+      if (!parts.length) { timer = setTimeout(fin, 0); return; }
+      const c = Lofi.ctx;
+      if (!recorded() || !have || !c || !parts.every((t) => have[id(t)])) { tts(parts.join(' '), fin, my); return; }
+      let i = 0;
+      const next = () => {
+        if (my !== seq) return;
+        if (i >= parts.length) { fin(); return; }
+        const k = id(parts[i]), rest = parts.slice(i).join(' ');
+        i++;
+        let late = false;
+        timer = setTimeout(() => { late = true; tts(rest, fin, my); }, 2500);     // too slow to arrive: say it the old way
+        load(k, (b) => {
+          if (late || my !== seq) return;
+          clearTimeout(timer);
+          if (!b) { tts(rest, fin, my); return; }
+          try {
+            if (c.state === 'suspended' && c.resume) c.resume();
+            const s1 = c.createBufferSource();
+            s1.buffer = b; s1.connect(c.destination); src = s1; cur = s1;
+            s1.onended = () => { if (src === s1) { src = null; clearTimeout(timer); timer = setTimeout(next, 60); } };
+            s1.start(0);
+            timer = setTimeout(() => { if (src === s1) { src = null; next(); } }, b.duration * 1000 + 900);
+          } catch (e) { tts(rest, fin, my); }
+        });
+      };
+      next();
     },
-    stop() { clearTimeout(timer); cur = null; try { if (S && (S.speaking || S.pending)) S.cancel(); } catch (e) { /* nothing to stop */ } },
-    // grown-up settings: the next voice on the device (best first), and the cartoon pitch
+    stop() { seq++; halt(); },
+    // fetch these lines' clips ahead of time, so they play straight away
+    preload(lines) {
+      ensure();
+      if (!have || !recorded() || !Lofi.ctx) return;
+      lines.forEach((t) => { const k = t && id(t); if (k && have[k]) load(k, () => {}); });
+    },
+    ensure: ensure,
+    // grown-up settings: the recorded cartoon voice, then the device's own voices (best first)
     next() {
-      pick();
-      if (!all.length) return;
-      const i = all.indexOf(voice);
-      voice = all[(i + 1) % all.length]; chosen = voice.name; store.set('voice', chosen);
-      api.say('Hi! I\'m Mister Isaac! Let\'s play!');
+      ensure(); pick();
+      const opts = ['recorded'].concat(all.map((v) => v.name));
+      chosen = opts[(Math.max(0, opts.indexOf(recorded() ? 'recorded' : chosen)) + 1) % opts.length];
+      store.set('voice', chosen);
+      voice = all.filter((v) => v.name === chosen)[0] || all[0] || null;
+      api.say('Let\'s play! Pick a game.');
     },
-    label() { if (!voice) pick(); return voice ? base(voice) + (/premium/i.test(voice.name) ? ' (Premium)' : /enhanced/i.test(voice.name) ? ' (Enhanced)' : '') : 'Default'; },
+    label() { if (recorded()) return 'Recorded'; if (!voice) pick(); return voice ? base(voice) + (/premium/i.test(voice.name) ? ' (Premium)' : /enhanced/i.test(voice.name) ? ' (Enhanced)' : '') : 'Default'; },
+    get recorded() { return recorded(); },
     get cartoon() { return cartoon; },
-    setCartoon(on) { cartoon = on; store.set('cartoon', on); api.say('Hi! I\'m Mister Isaac! Let\'s play!'); },
+    setCartoon(on) { cartoon = on; store.set('cartoon', on); api.say('Let\'s play! Pick a game.'); },
+    id: id,
   };
   return api;
 })();
@@ -1841,7 +1913,8 @@ function numbersRound(lv) {
   const thing = oneOf([['star', 'stars'], ['heart', 'hearts'], ['circle', 'circles']]), paint = oneOf(GM_PAINT);
   let items = ''; for (let i = 0; i < ans; i++) items += shapeSvg(thing[0], paint);
   const r = { answer: ans, text: 'How many ' + thing[1] + '?', say: 'How many ' + thing[1] + '? Count them!', praise: cap(NUM_WORDS[ans]) + ' ' + (ans === 1 ? thing[0] : thing[1]) + '!',
-    target: '<div class="gm-count">' + items + '</div>', choices: choices };
+    target: '<div class="gm-count">' + items + '</div>', choices: choices,
+    lines: ['Let\'s count together!', cap(NUM_WORDS[ans]) + '! Find the number ' + NUM_WORDS[ans] + '.'].concat(NUM_WORDS.slice(1, ans + 1)) };
   r.onWrong = (done) => countAlong(r, ans, () => Voice.say(cap(NUM_WORDS[ans]) + '! Find the number ' + NUM_WORDS[ans] + '.', done));   // the first miss: count them together
   r.onRight = () => { const it = gmEls.target.querySelectorAll('.gm-count svg'); for (let i = 0; i < it.length; i++) hop(it[i], i * 90); };
   return r;
@@ -1859,7 +1932,8 @@ function wordsRound(lv) {
   const ans = set[0], word = ans[0], letters = word.toUpperCase().split('');
   const r = { answer: word, text: 'Find the ' + word + '!', say: 'Find the ' + word + '!', praise: letters.join(', ') + ' spells ' + word + '!',
     target: '<div class="gm-tiles">' + letters.map(() => '<span class="gm-tile"></span>').join('') + '</div>',
-    choices: shuffled(set.map((w) => ({ key: w[0], html: '<span class="emo">' + w[1] + '</span><span class="word">' + w[0].toUpperCase() + '</span>', said: 'the ' + w[0] }))) };
+    choices: shuffled(set.map((w) => ({ key: w[0], html: '<span class="emo">' + w[1] + '</span><span class="word">' + w[0].toUpperCase() + '</span>', said: 'the ' + w[0] }))),
+    lines: letters.concat([word + '!']) };
   const tiles = () => gmEls.target.querySelectorAll('.gm-tile');
   r.finishIntro = () => { const t = tiles(); for (let i = 0; i < t.length; i++) { t[i].textContent = letters[i]; t[i].classList.add('on'); t[i].classList.remove('hi'); } };
   r.intro = (done) => {
@@ -2150,7 +2224,6 @@ function isaacBuild() {
     Sfx.moo();
     gmEls.host.classList.remove('hop'); void gmEls.host.offsetWidth; gmEls.host.classList.add('hop');
     hostWave(1400, true);
-    Voice.say('Moo! Hi! I\'m Mister Isaac!');
   });
 }
 function isaacPlay(name) {
@@ -2278,6 +2351,7 @@ function openGames(byKey) {
   if (!gamesOn || gm.open || !started) return;
   if (guideOpen) closeGuide();
   if (!gmEls.picks.children.length) gmBuild();
+  Voice.ensure();
   gm.open = true; gm.keys = !!byKey;
   document.body.classList.add('gaming');
   clearTimeout(bannerTimer); els.banner.classList.add('hide'); els.hint.classList.add('hide'); document.body.classList.remove('ui');
@@ -2308,6 +2382,21 @@ function gmShowButton() {
   els.hint.classList.toggle('nogames', !gamesOn);
   if (!gamesOn) closeGames();
 }
+// Every line the games can say (the recorded voice is made from this list: see README).
+function gmAllLines() {
+  const L = ['Let\'s play! Pick a game.', 'Let\'s play! Pick a game: shapes, colors, numbers, letters, or words.', 'Five stars! You\'re a superstar!', 'Let\'s count together!'];
+  const THINGS = [['star', 'stars'], ['heart', 'hearts'], ['circle', 'circles']];
+  GAMES.forEach((g) => L.push(g.name + '!'));
+  PRAISE.forEach((x) => L.push(x));
+  SHAPE_NAMES.forEach((x) => L.push('Find the ' + x + '!', 'That\'s the ' + x + '!', 'That\'s the ' + x + '.'));
+  GM_COLORS.forEach((c) => L.push('Find the ' + c[0] + ' balloon!', 'That\'s ' + c[0] + '!', 'That\'s ' + c[0] + '.'));
+  for (let n = 1; n <= 10; n++) L.push('Find the number ' + NUM_WORDS[n] + '!', 'That\'s ' + NUM_WORDS[n] + '!', 'That\'s number ' + NUM_WORDS[n] + '.', NUM_WORDS[n]);
+  for (let n = 1; n <= 6; n++) { L.push(cap(NUM_WORDS[n]) + '! Find the number ' + NUM_WORDS[n] + '.'); THINGS.forEach((t) => L.push(cap(NUM_WORDS[n]) + ' ' + (n === 1 ? t[0] : t[1]) + '!')); }
+  THINGS.forEach((t) => L.push('How many ' + t[1] + '? Count them!'));
+  LETTERS.forEach((x) => L.push('Find the letter ' + x + '!', 'That\'s the letter ' + x + '!', 'That\'s the letter ' + x + '.', x));
+  WORDS.forEach((w) => L.push(w[0] + '!', 'Find the ' + w[0] + '!', 'That\'s the ' + w[0] + '.', w[0].toUpperCase().split('').join(', ') + ' spells ' + w[0] + '!'));
+  return L.filter((x, i) => L.indexOf(x) === i);
+}
 function gmMenu() {
   gm.screen = 'menu'; gm.game = null; gm.round = null; clearTimeout(gm.idleT);
   gmEls.menu.hidden = false; gmEls.play.hidden = true; gmEls.home.hidden = true;
@@ -2325,6 +2414,7 @@ function gmStart(g) {
   gm.row = 1; gm.col = 0; gmCursor();
   hostBlinks(false);
   isaacQueue(true);
+  Voice.preload([g.name + '!'].concat(PRAISE));
   Voice.say(g.name + '!', () => { if (gm.game === g && !gm.round) gmRound(); });
 }
 function gmRound() {
@@ -2345,6 +2435,7 @@ function gmRound() {
     gmEls.choices.appendChild(b);
   });
   gm.row = 1; gm.col = 0; gm.idleN = 0; gmCursor();
+  Voice.preload([r.say, r.praise].concat(r.choices.map((c) => 'That\'s ' + c.said + '.'), r.lines || []));
   if (r.intro) r.intro(gmAsk); else gmAsk();
 }
 function gmAsk() {
@@ -2391,7 +2482,7 @@ function gmPick(i) {
     if (r.onRight) r.onRight(b);
     gmStar();
     const t0 = Date.now();
-    Voice.say(oneOf(PRAISE) + ' ' + r.praise, () => setTimeout(() => { if (gm.round === r) gmAfter(); }, Math.max(250, 1700 - (Date.now() - t0))));
+    Voice.say([oneOf(PRAISE), r.praise], () => setTimeout(() => { if (gm.round === r) gmAfter(); }, Math.max(250, 1700 - (Date.now() - t0))));
   } else {
     r.misses++;
     Sfx.oops();
@@ -2399,7 +2490,7 @@ function gmPick(i) {
     b.classList.remove('wrong'); void b.offsetWidth; b.classList.add('wrong');
     setTimeout(() => b.classList.add('dim'), 420);
     if (r.onWrong && r.misses === 1) Voice.say('That\'s ' + c.said + '.', () => r.onWrong(gmIdle));
-    else { Voice.say('That\'s ' + c.said + '. ' + r.say); gmIdle(); }
+    else { Voice.say(['That\'s ' + c.said + '.', r.say]); gmIdle(); }
     gmCursor();
   }
 }
@@ -2485,7 +2576,7 @@ gmEls.say.addEventListener('click', (e) => { e.stopPropagation(); gmReplay(); })
 gmEls.root.addEventListener('pointerdown', () => { if (gm.keys) { gm.keys = false; gmCursor(); } });
 gmEls.root.addEventListener('contextmenu', (e) => e.preventDefault());
 gmShowButton();
-window.smmGames = { open: openGames, close: closeGames, state: gm, isaac: isaacPlay, isaacState: Isaac };   // for testing
+window.smmGames = { open: openGames, close: closeGames, state: gm, isaac: isaacPlay, isaacState: Isaac, lines: () => gmAllLines().map((t) => [Voice.id(t), t]) };   // for testing
 
 renderGuide();
 const s = document.createElement('script');

@@ -82,8 +82,8 @@ bring a marshmallow shower. Each game starts with two choices and adds one after
 four), and drops one again after a tough question. Saying it again: the green speaker button. The red **TV**
 button goes back to the show where it left off.
 
-**Mr. Isaac**, the cow, hosts the games. He stands by the title on the menu and waves (tap him and he moos and
-says hi). While they play he shows up every 10 to 20 seconds or so, behind the cards so he never gets in the way of a tap:
+**Mr. Isaac**, the cow, hosts the games. He stands by the title on the menu and waves (tap him and he moos; he
+doesn't talk). While they play he shows up every 10 to 20 seconds or so, behind the cards so he never gets in the way of a tap:
 a little ballet to a music-box waltz, bouncing up from a trampoline below the screen, peeking his head in from
 an edge, or wandering in with a marshmallow, taking a bite, realizing everyone can see him, and tiptoeing back out
 until only his tail is left (and a few crumbs). He also bounces along when they earn five stars. His head and body are traced from Josh's drawing
@@ -91,6 +91,17 @@ until only his tail is left (and a few crumbs). He also bounces along when they 
 `index.html` so they can move. He sits still if the device is set to reduce motion.
 
 Grown-ups can turn the games off in the settings; the button, the guide entry and the Yellow key go away.
+
+### The games' voice
+
+Every line the games say is a recorded clip in `voice/` (one MP3 per line, named by a hash of the line, listed in
+`voice/lines.js`). They were made with [Kokoro](https://github.com/thewh1teagle/kokoro-onnx), an open-source voice
+(the `af_heart` voice). A line without a clip falls back to the
+device's own voice. In the grown-up settings, **Games voice** switches between the recorded voice and the device's
+voices (best ones first), and **Cartoon voice** pitches a device voice up.
+
+When the games get new lines, the clips need making again: `window.smmGames.lines()` in the browser console lists
+every line with its clip name; record the missing ones the same way and bump `VOICE_V` in `index.html`.
 
 ## What's different from BSO TV
 

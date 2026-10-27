@@ -58,7 +58,8 @@ On a phone or tablet: swipe up or down to change channel, tap for the buttons.
 
 At the bottom of the guide, **Grown-ups** asks a times-table question with four big answers. Answer it and the
 settings show: captions, picture fill or fit, jump in mid-show, cover commercials, music during commercials,
-the learning games (on or off), tilt for the marshmallows (phones and iPads; asks for motion access once each time the app opens), and
+the learning games (on or off), the games voice (steps through the device's voices; best ones first) and its
+cartoon pitch, tilt for the marshmallows (phones and iPads; asks for motion access once each time the app opens), and
 YouTube's debug readout.
 They hide again as soon as the guide closes.
 

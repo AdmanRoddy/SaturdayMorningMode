@@ -1326,6 +1326,11 @@ const SETTINGS = [
   { key: 'debug', tag: '?', label: 'Show what YouTube says', get: () => DEBUG, on: 'On', off: 'Off',
     toggle: () => { DEBUG = !DEBUG; store.set('debug', DEBUG); const el = document.getElementById('dbg'); if (el) el.hidden = !DEBUG; if (DEBUG) dbg('showing what YouTube says'); setSettingLabels(); } },
 ];
+if (window.speechSynthesis) {
+  SETTINGS.push({ key: 'voice', tag: 'Aa', label: 'Games voice (tap to hear the next one)', get: () => false, state: () => Voice.label(), toggle: () => { Voice.next(); setSettingLabels(); } });
+  SETTINGS.push({ key: 'cartoon', tag: '\u263A', label: 'Cartoon voice (higher and bouncier)', get: () => Voice.cartoon, on: 'On', off: 'Off',
+    toggle: () => { Voice.setCartoon(!Voice.cartoon); setSettingLabels(); } });
+}
 if (TOUCH) SETTINGS.push({ key: 'tilt', tag: '\u21BB', label: 'Tilt moves the marshmallows (asks for motion access)', get: () => tiltOn, on: 'On', off: 'Off',
   toggle: () => { tiltOn = !tiltOn; store.set('tilt', tiltOn); if (tiltOn) wakeTilt(); else stopTilt(); setSettingLabels(); } });
 if (!IN_APP) SETTINGS.push({ key: 'yt', tag: 'YT', label: 'Sign in to YouTube Premium (no ads)', get: () => false, on: '', off: 'Open',
@@ -1333,7 +1338,7 @@ if (!IN_APP) SETTINGS.push({ key: 'yt', tag: 'YT', label: 'Sign in to YouTube Pr
 function setSettingLabels() {
   SETTINGS.forEach((st) => {
     const el = els.list.querySelector('[data-setting="' + st.key + '"] .state');
-    if (el) { el.textContent = st.get() ? st.on : st.off; el.classList.toggle('on', !!st.get()); }
+    if (el) { el.textContent = st.state ? st.state() : st.get() ? st.on : st.off; el.classList.toggle('on', !!st.get()); }
   });
 }
 function toggleFill() { fillOn = !fillOn; store.set('fill', fillOn); setSettingLabels(); fitStage(); showBanner(); }
@@ -1600,21 +1605,39 @@ const gmEls = { root: $('games'), menu: $('gm-menu'), picks: $('gm-picks'), play
 
 // The voice: the device's own text-to-speech. A new line cuts off the last one (and its follow-up), and if the
 // device never says it finished, a timer carries on, so a game can't get stuck waiting on it.
+// The voice: the device's own text-to-speech. A new line cuts off the last one (and its follow-up), and if the
+// device never says it finished, a timer carries on, so a game can't get stuck waiting on it.
+// It picks the best-sounding voice the device has (Premium and Enhanced voices first), pitched up a little for
+// a cartoon feel. Grown-ups can step through the device's voices and turn the cartoon pitch off in the settings.
 const Voice = (() => {
   const S = window.speechSynthesis, U = window.SpeechSynthesisUtterance;
-  let voice = null, timer = 0, cur = null;
-  const LIKE = ['Samantha', 'Aria', 'Jenny', 'Ava', 'Allison', 'Google US English', 'Susan', 'Zira', 'Karen', 'Moira', 'Tessa'];
+  let voice = null, timer = 0, cur = null, all = [], chosen = store.get('voice', '') || '', cartoon = store.get('cartoon', true) !== false;
+  const NICE = ['Zoe', 'Ava', 'Evan', 'Allison', 'Nicky', 'Joelle', 'Noelle', 'Samantha', 'Susan', 'Nathan', 'Tom', 'Flo', 'Sandy', 'Shelley', 'Junior',
+    'Aria', 'Jenny', 'Ana', 'Michelle', 'Google US English', 'Karen', 'Moira', 'Tessa', 'Serena', 'Kate'];
+  const NOVELTY = /^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Pipe Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Deranged|Hysterical|Princess)$/i;
+  const base = (v) => (v.name || '').replace(/\s*\(.*\)\s*$/, '').replace(/^Microsoft\s+/, '').replace(/\s+Online.*$/, '');
+  function score(v) {
+    const n = (v.name || '') + ' ' + (v.voiceURI || '');
+    let sc = 0;
+    if (/premium/i.test(n)) sc += 100; else if (/enhanced|neural|natural|online/i.test(n)) sc += 60;
+    const i = NICE.findIndex((k) => base(v).indexOf(k) === 0);
+    if (i >= 0) sc += 40 - i;
+    if (/^en[-_]US/i.test(v.lang || '')) sc += 4;
+    if (NOVELTY.test(base(v))) sc -= 90;
+    return sc;
+  }
   function pick() {
     try {
-      const all = (S && S.getVoices && S.getVoices()) || [];
-      const en = all.filter((v) => /^en([-_]|$)/i.test(v.lang || ''));
-      for (let i = 0; i < LIKE.length; i++) { const v = en.filter((x) => (x.name || '').indexOf(LIKE[i]) >= 0)[0]; if (v) { voice = v; return; } }
-      voice = en.filter((v) => /^en[-_]US/i.test(v.lang))[0] || en[0] || null;
+      const seen = {};
+      all = ((S && S.getVoices && S.getVoices()) || []).filter((v) => /^en([-_]|$)/i.test(v.lang || '') && !seen[v.name] && (seen[v.name] = 1))
+        .sort((x, y) => score(y) - score(x));
+      voice = all.filter((v) => v.name === chosen)[0] || all[0] || null;
     } catch (e) { voice = null; }
   }
   if (S && S.addEventListener) S.addEventListener('voiceschanged', pick);
   pick();
-  return {
+  const api = {
+    ok: !!(S && U),
     say(text, done) {
       clearTimeout(timer);
       let once = done;
@@ -1627,7 +1650,7 @@ const Voice = (() => {
         const u = new U(text);
         cur = u;
         if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = 'en-US';
-        u.rate = 0.9; u.pitch = 1.15; u.volume = 1;
+        u.rate = cartoon ? 0.98 : 0.92; u.pitch = cartoon ? 1.4 : 1.05; u.volume = 1;
         u.onend = () => { if (cur === u) fin(); };
         u.onerror = () => { if (cur === u) fin(); };
         S.speak(u);
@@ -1635,7 +1658,19 @@ const Voice = (() => {
       } catch (e) { timer = setTimeout(fin, 600); }
     },
     stop() { clearTimeout(timer); cur = null; try { if (S && (S.speaking || S.pending)) S.cancel(); } catch (e) { /* nothing to stop */ } },
+    // grown-up settings: the next voice on the device (best first), and the cartoon pitch
+    next() {
+      pick();
+      if (!all.length) return;
+      const i = all.indexOf(voice);
+      voice = all[(i + 1) % all.length]; chosen = voice.name; store.set('voice', chosen);
+      api.say('Hi! I\'m Mister Isaac! Let\'s play!');
+    },
+    label() { if (!voice) pick(); return voice ? base(voice) + (/premium/i.test(voice.name) ? ' (Premium)' : /enhanced/i.test(voice.name) ? ' (Enhanced)' : '') : 'Default'; },
+    get cartoon() { return cartoon; },
+    setCartoon(on) { cartoon = on; store.set('cartoon', on); api.say('Hi! I\'m Mister Isaac! Let\'s play!'); },
   };
+  return api;
 })();
 
 // Chimes, made on the spot like the commercial-break music.

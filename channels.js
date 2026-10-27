@@ -165,6 +165,8 @@ window.SMM_CHANNELS = [
     'XHktscKh9WA',   // Marzipan
     'UIb0g6iMQ5M'    // Flowers
   ] },
+  // VeggieTales Official (Big Idea Entertainment): full classic episodes, compilations and Silly Songs
+  { name: 'VeggieTales', id: 'UChddokv0fxIN3BS-KZpxFfA' },
   // free full movies from Air Bud Entertainment's own channel (the only ones from the list posted free by their owner)
   { name: 'Saturday Matinee', slate: 'dvd', ids: [
     '1VRVdf71dfo',   // Air Bud

@@ -267,7 +267,6 @@ body.touch .hint{display:none}
   box-shadow:.8vmin .8vmin 0 var(--ink);font-family:'Luckiest Guy','Arial Black',Impact,sans-serif;font-weight:400;font-size:4.6vmin;cursor:pointer}
 .gm-btn[hidden]{display:none}
 .gm-btn.round{width:11vmin;padding:0}
-.gm-side.right .gm-btn{margin:0 0 0 2.2vmin}
 .gm-btn svg{flex:0 0 auto;width:6.2vmin;height:6.2vmin}
 .gm-btn .lbl{margin-left:1.4vmin;padding-top:.7vmin}
 .gm-stars{position:absolute;left:50%;top:2.6vmin;height:11vmin;display:flex;align-items:center;transform:translateX(-50%);pointer-events:none}
@@ -464,9 +463,6 @@ body.gaming .mallow{z-index:12}
       <button class="gm-btn round p-yellow" id="gm-home" type="button" aria-label="Pick another game" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2.2"/><rect x="13" y="3" width="8" height="8" rx="2.2"/><rect x="3" y="13" width="8" height="8" rx="2.2"/><rect x="13" y="13" width="8" height="8" rx="2.2"/></svg></button>
     </div>
     <div class="gm-stars" id="gm-stars" aria-hidden="true"></div>
-    <div class="gm-side right">
-      <button class="gm-btn round p-green" id="gm-say" type="button" aria-label="Say it again"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L13 19V5L7.5 9.5z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>
-    </div>
   </div>
   <div class="gm-body">
     <div class="gm-menu" id="gm-menu">
@@ -1277,7 +1273,6 @@ function start() {
   if (started) return;
   goFullscreen();
   Lofi.unlock();           // the commercial-break music needs this tap to be allowed to play later
-  if (gamesOn) setTimeout(() => Voice.ensure(), 4000);   // the games' recorded voice list, ready for when they open
   started = true;
   els.boot.hidden = true;
   tune(chIndex);           // shows the tuning screen; plays now, or once the player is ready
@@ -1328,11 +1323,6 @@ const SETTINGS = [
   { key: 'debug', tag: '?', label: 'Show what YouTube says', get: () => DEBUG, on: 'On', off: 'Off',
     toggle: () => { DEBUG = !DEBUG; store.set('debug', DEBUG); const el = document.getElementById('dbg'); if (el) el.hidden = !DEBUG; if (DEBUG) dbg('showing what YouTube says'); setSettingLabels(); } },
 ];
-if (window.speechSynthesis) {
-  SETTINGS.push({ key: 'voice', tag: 'Aa', label: 'Games voice (tap to change)', get: () => false, state: () => Voice.label(), toggle: () => { Voice.next(); setSettingLabels(); } });
-  SETTINGS.push({ key: 'cartoon', tag: '\u263A', label: 'Cartoon voice (higher and bouncier)', get: () => Voice.cartoon, on: 'On', off: 'Off',
-    toggle: () => { Voice.setCartoon(!Voice.cartoon); setSettingLabels(); } });
-}
 if (TOUCH) SETTINGS.push({ key: 'tilt', tag: '\u21BB', label: 'Tilt moves the marshmallows (asks for motion access)', get: () => tiltOn, on: 'On', off: 'Off',
   toggle: () => { tiltOn = !tiltOn; store.set('tilt', tiltOn); if (tiltOn) wakeTilt(); else stopTilt(); setSettingLabels(); } });
 if (!IN_APP) SETTINGS.push({ key: 'yt', tag: 'YT', label: 'Sign in to YouTube Premium (no ads)', get: () => false, on: '', off: 'Open',
@@ -1603,151 +1593,20 @@ window.smmTilt = tilt;   // for testing tilt without a phone
 // bring a marshmallow shower. No timers and nothing to lose. Each game gets harder (more to choose from)
 // after a few right answers in a row, and easier again if it's a struggle. The show pauses while they play.
 const gmEls = { root: $('games'), menu: $('gm-menu'), picks: $('gm-picks'), play: $('gm-play'), prompt: $('gm-prompt'), target: $('gm-target'),
-  choices: $('gm-choices'), stars: $('gm-stars'), tv: $('gm-tv'), home: $('gm-home'), say: $('gm-say'), btn: $('btn-games'), actor: $('gm-actor'), host: $('gm-host') };
+  choices: $('gm-choices'), stars: $('gm-stars'), tv: $('gm-tv'), home: $('gm-home'), btn: $('btn-games'), actor: $('gm-actor'), host: $('gm-host') };
 
-// The voice. Off unless a grown-up turns it on: the games work by sight and sound effects alone. When it's on,
-// every line is a recorded clip (voice/, made with the open-source Kokoro voice) played through the same sound
-// chip as the chimes, or one of the device's own voices. Mr. Isaac himself doesn't talk.
-// A line without a clip, or a device that can't fetch them, falls back to the device's own text-to-speech.
-// A new line cuts off the last one (and whatever was meant to follow it), and if something never says it's
-// finished, a timer carries on, so a game can't get stuck waiting.
-// Grown-ups can switch to one of the device's voices in the settings (with or without a cartoon pitch).
-const VOICE_V = 1;                             // bump when the clips are re-recorded
-const Voice = (() => {
-  const S = window.speechSynthesis, U = window.SpeechSynthesisUtterance;
-  let voice = null, timer = 0, cur = null, src = null, seq = 0, all = [], chosen = store.get('voice', '') || '', cartoon = !!store.get('cartoon', false);
-  const buf = {}, wait = {};
-  let have = null, loading = false;
-  const NICE = ['Zoe', 'Ava', 'Evan', 'Allison', 'Nicky', 'Joelle', 'Noelle', 'Samantha', 'Susan', 'Nathan', 'Tom', 'Flo', 'Sandy', 'Shelley', 'Junior',
-    'Aria', 'Jenny', 'Ana', 'Michelle', 'Google US English', 'Karen', 'Moira', 'Tessa', 'Serena', 'Kate'];
-  const NOVELTY = /^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Pipe Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Deranged|Hysterical|Princess)$/i;
-  const base = (v) => (v.name || '').replace(/\s*\(.*\)\s*$/, '').replace(/^Microsoft\s+/, '').replace(/\s+Online.*$/, '');
-  const id = (t) => hash(t).toString(36);
-  const recorded = () => chosen === 'recorded', off = () => !chosen || chosen === 'off';
-  function score(v) {
-    const n = (v.name || '') + ' ' + (v.voiceURI || '');
-    let sc = 0;
-    if (/premium/i.test(n)) sc += 100; else if (/enhanced|neural|natural|online/i.test(n)) sc += 60;
-    const i = NICE.findIndex((k) => base(v).indexOf(k) === 0);
-    if (i >= 0) sc += 40 - i;
-    if (/^en[-_]US/i.test(v.lang || '')) sc += 4;
-    if (NOVELTY.test(base(v))) sc -= 90;
-    return sc;
-  }
-  function pick() {
-    try {
-      const seen = {};
-      all = ((S && S.getVoices && S.getVoices()) || []).filter((v) => /^en([-_]|$)/i.test(v.lang || '') && !seen[v.name] && (seen[v.name] = 1))
-        .sort((x, y) => score(y) - score(x));
-      voice = all.filter((v) => v.name === chosen)[0] || all[0] || null;
-    } catch (e) { voice = null; }
-  }
-  if (S && S.addEventListener) S.addEventListener('voiceschanged', pick);
-  pick();
-  // the list of recorded lines (fetched once)
-  function ensure() {
-    if (have || loading || !recorded()) return;
-    loading = true;
-    const sc = document.createElement('script');
-    sc.src = 'voice/lines.js?v=' + VOICE_V;
-    sc.onload = () => { loading = false; have = window.SMM_VOICE || {}; api.preload(['Let\'s play! Pick a game.']); };
-    sc.onerror = () => { loading = false; };
-    document.head.appendChild(sc);
-  }
-  function load(k, cb) {
-    if (buf[k]) { cb(buf[k]); return; }
-    if (wait[k]) { wait[k].push(cb); return; }
-    wait[k] = [cb];
-    const done = (b) => { const w = wait[k] || []; delete wait[k]; if (b) buf[k] = b; w.forEach((f) => f(b)); };
-    const c = Lofi.ctx;
-    if (!c || !window.fetch) { done(null); return; }
-    fetch('voice/' + k + '.mp3?v=' + VOICE_V).then((r) => (r.ok ? r.arrayBuffer() : null)).then((ab) => {
-      if (!ab) { done(null); return; }
-      try { c.decodeAudioData(ab, (b) => done(b), () => done(null)); } catch (e) { done(null); }
-    }).catch(() => done(null));
-  }
-  function tts(text, fin, my) {
-    if (my !== seq) return;
-    if (!S || !U) { cur = null; timer = setTimeout(fin, 600 + text.length * 55); return; }   // no voice here: just keep the pace
-    try {
-      if (S.speaking || S.pending) S.cancel();
-      if (!voice) pick();
-      const u = new U(text);
-      cur = u;
-      if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = 'en-US';
-      u.rate = cartoon ? 0.98 : 0.92; u.pitch = cartoon ? 1.4 : 1.05; u.volume = 1;
-      u.onend = () => { if (cur === u) fin(); };
-      u.onerror = () => { if (cur === u) fin(); };
-      S.speak(u);
-      timer = setTimeout(() => { if (cur === u) fin(); }, 1800 + text.length * 95);
-    } catch (e) { timer = setTimeout(fin, 600); }
-  }
-  function halt() {
-    clearTimeout(timer); cur = null;
-    if (src) { try { src.onended = null; src.stop(); } catch (e) { /* already done */ } src = null; }
-    try { if (S && (S.speaking || S.pending)) S.cancel(); } catch (e) { /* nothing to stop */ }
-  }
-  const api = {
-    // say a line, or several in a row (["Yay!", "That's the star!"]); then done()
-    say(text, done) {
-      halt();
-      const my = ++seq, parts = (Array.isArray(text) ? text : [text]).filter((t) => t);
-      let once = done;
-      const fin = () => { clearTimeout(timer); if (my !== seq) return; const d = once; once = null; if (d) d(); };
-      if (!parts.length) { timer = setTimeout(fin, 0); return; }
-      if (off()) { timer = setTimeout(fin, 300 + parts.join(' ').length * 35); return; }   // voice off: just keep the pace
-      const c = Lofi.ctx;
-      if (!recorded() || !have || !c || !parts.every((t) => have[id(t)])) { tts(parts.join(' '), fin, my); return; }
-      let i = 0;
-      const next = () => {
-        if (my !== seq) return;
-        if (i >= parts.length) { fin(); return; }
-        const k = id(parts[i]), rest = parts.slice(i).join(' ');
-        i++;
-        let late = false;
-        timer = setTimeout(() => { late = true; tts(rest, fin, my); }, 2500);     // too slow to arrive: say it the old way
-        load(k, (b) => {
-          if (late || my !== seq) return;
-          clearTimeout(timer);
-          if (!b) { tts(rest, fin, my); return; }
-          try {
-            if (c.state === 'suspended' && c.resume) c.resume();
-            const s1 = c.createBufferSource();
-            s1.buffer = b; s1.connect(c.destination); src = s1; cur = s1;
-            s1.onended = () => { if (src === s1) { src = null; clearTimeout(timer); timer = setTimeout(next, 60); } };
-            s1.start(0);
-            timer = setTimeout(() => { if (src === s1) { src = null; next(); } }, b.duration * 1000 + 900);
-          } catch (e) { tts(rest, fin, my); }
-        });
-      };
-      next();
+// The games don't talk: the pictures, chimes and stars do the work. Beat.after() waits about as long as a
+// line would take to say, so each step still gets its moment before the next. A new beat cancels the last one.
+const Beat = (() => {
+  let timer = 0;
+  return {
+    after(text, done) {
+      clearTimeout(timer);
+      const n = (Array.isArray(text) ? text.join(' ') : text || '').length;
+      timer = setTimeout(() => { if (done) done(); }, 300 + n * 35);
     },
-    stop() { seq++; halt(); },
-    // fetch these lines' clips ahead of time, so they play straight away
-    preload(lines) {
-      ensure();
-      if (!have || !recorded() || !Lofi.ctx) return;
-      lines.forEach((t) => { const k = t && id(t); if (k && have[k]) load(k, () => {}); });
-    },
-    ensure: ensure,
-    // grown-up settings: the recorded cartoon voice, then the device's own voices (best first)
-    next() {
-      ensure(); pick();
-      const opts = ['off', 'recorded'].concat(all.map((v) => v.name));
-      chosen = opts[(Math.max(0, opts.indexOf(off() ? 'off' : chosen)) + 1) % opts.length];
-      ensure();
-      store.set('voice', chosen);
-      voice = all.filter((v) => v.name === chosen)[0] || all[0] || null;
-      if (!off()) api.say('Let\'s play! Pick a game.');
-    },
-    label() { if (off()) return 'Off'; if (recorded()) return 'Recorded'; if (!voice) pick(); return voice ? base(voice) + (/premium/i.test(voice.name) ? ' (Premium)' : /enhanced/i.test(voice.name) ? ' (Enhanced)' : '') : 'Default'; },
-    get recorded() { return recorded(); },
-    get on() { return !off(); },
-    get cartoon() { return cartoon; },
-    setCartoon(on) { cartoon = on; store.set('cartoon', on); if (!off()) api.say('Let\'s play! Pick a game.'); },
-    id: id,
+    stop() { clearTimeout(timer); },
   };
-  return api;
 })();
 
 // Chimes, made on the spot like the commercial-break music.
@@ -1920,7 +1779,7 @@ function numbersRound(lv) {
   const r = { answer: ans, text: 'How many ' + thing[1] + '?', say: 'How many ' + thing[1] + '? Count them!', praise: cap(NUM_WORDS[ans]) + ' ' + (ans === 1 ? thing[0] : thing[1]) + '!',
     target: '<div class="gm-count">' + items + '</div>', choices: choices,
     lines: ['Let\'s count together!', cap(NUM_WORDS[ans]) + '! Find the number ' + NUM_WORDS[ans] + '.'].concat(NUM_WORDS.slice(1, ans + 1)) };
-  r.onWrong = (done) => countAlong(r, ans, () => Voice.say(cap(NUM_WORDS[ans]) + '! Find the number ' + NUM_WORDS[ans] + '.', done));   // the first miss: count them together
+  r.onWrong = (done) => countAlong(r, ans, done);   // the first miss: the stars hop one at a time, counting themselves
   r.onRight = () => { const it = gmEls.target.querySelectorAll('.gm-count svg'); for (let i = 0; i < it.length; i++) hop(it[i], i * 90); };
   return r;
 }
@@ -1947,10 +1806,10 @@ function wordsRound(lv) {
       if (gm.round !== r || !gm.open) return;
       const t = tiles();
       for (let j = 0; j < t.length; j++) t[j].classList.remove('hi');
-      if (i >= letters.length) { Voice.say(word + '!', done); return; }
+      if (i >= letters.length) { Beat.after(word + '!', done); return; }
       const el = t[i];
-      if (el) { el.textContent = letters[i]; el.classList.add('on'); el.classList.add('hi'); if (!Voice.on) Sfx.tap(); }
-      Voice.say(letters[i], () => setTimeout(step, 150));
+      if (el) { el.textContent = letters[i]; el.classList.add('on'); el.classList.add('hi'); Sfx.tap(); }
+      Beat.after(letters[i], () => setTimeout(step, 150));
       i++;
     };
     step();
@@ -1967,11 +1826,11 @@ function countAlong(r, n, done) {
   const step = () => {
     if (gm.round !== r || !gm.open) return;
     if (k >= n) { done(); return; }
-    if (items[k]) { hop(items[k]); if (!Voice.on) Sfx.tap(); }
+    if (items[k]) { hop(items[k]); Sfx.tap(); }
     k++;
-    Voice.say(NUM_WORDS[k], step);
+    Beat.after(NUM_WORDS[k], step);
   };
-  Voice.say('Let\'s count together!', step);
+  Beat.after('Let\'s count together!', step);
 }
 const artTxt = (t) => '<span class="art-txt">' + t.split('').map((c, i) => '<b style="color:' + GLYPH_PAINT[i % GLYPH_PAINT.length] + '">' + c + '</b>').join('') + '</span>';
 const GAMES = [
@@ -2356,7 +2215,6 @@ function openGames(byKey) {
   if (!gamesOn || gm.open || !started) return;
   if (guideOpen) closeGuide();
   if (!gmEls.picks.children.length) gmBuild();
-  Voice.ensure();
   gm.open = true; gm.keys = !!byKey;
   document.body.classList.add('gaming');
   clearTimeout(bannerTimer); els.banner.classList.add('hide'); els.hint.classList.add('hide'); document.body.classList.remove('ui');
@@ -2370,7 +2228,7 @@ function openGames(byKey) {
 function closeGames() {
   if (!gm.open) return;
   gm.open = false; gm.round = null; gm.game = null;
-  clearTimeout(gm.idleT); Voice.stop();
+  clearTimeout(gm.idleT); Beat.stop();
   isaacStop(); clearTimeout(Isaac.next); hostBlinks(false); cancelAnimationFrame(Isaac.hostRaf); Isaac.hostRaf = 0;
   gmEls.root.hidden = true; document.body.classList.remove('gaming');
   if (gm.wasPlaying && player && player.playVideo) {
@@ -2387,21 +2245,6 @@ function gmShowButton() {
   els.hint.classList.toggle('nogames', !gamesOn);
   if (!gamesOn) closeGames();
 }
-// Every line the games can say (the recorded voice is made from this list: see README).
-function gmAllLines() {
-  const L = ['Let\'s play! Pick a game.', 'Let\'s play! Pick a game: shapes, colors, numbers, letters, or words.', 'Five stars! You\'re a superstar!', 'Let\'s count together!'];
-  const THINGS = [['star', 'stars'], ['heart', 'hearts'], ['circle', 'circles']];
-  GAMES.forEach((g) => L.push(g.name + '!'));
-  PRAISE.forEach((x) => L.push(x));
-  SHAPE_NAMES.forEach((x) => L.push('Find the ' + x + '!', 'That\'s the ' + x + '!', 'That\'s the ' + x + '.'));
-  GM_COLORS.forEach((c) => L.push('Find the ' + c[0] + ' balloon!', 'That\'s ' + c[0] + '!', 'That\'s ' + c[0] + '.'));
-  for (let n = 1; n <= 10; n++) L.push('Find the number ' + NUM_WORDS[n] + '!', 'That\'s ' + NUM_WORDS[n] + '!', 'That\'s number ' + NUM_WORDS[n] + '.', NUM_WORDS[n]);
-  for (let n = 1; n <= 6; n++) { L.push(cap(NUM_WORDS[n]) + '! Find the number ' + NUM_WORDS[n] + '.'); THINGS.forEach((t) => L.push(cap(NUM_WORDS[n]) + ' ' + (n === 1 ? t[0] : t[1]) + '!')); }
-  THINGS.forEach((t) => L.push('How many ' + t[1] + '? Count them!'));
-  LETTERS.forEach((x) => L.push('Find the letter ' + x + '!', 'That\'s the letter ' + x + '!', 'That\'s the letter ' + x + '.', x));
-  WORDS.forEach((w) => L.push(w[0] + '!', 'Find the ' + w[0] + '!', 'That\'s the ' + w[0] + '.', w[0].toUpperCase().split('').join(', ') + ' spells ' + w[0] + '!'));
-  return L.filter((x, i) => L.indexOf(x) === i);
-}
 function gmMenu() {
   gm.screen = 'menu'; gm.game = null; gm.round = null; clearTimeout(gm.idleT);
   gmEls.menu.hidden = false; gmEls.play.hidden = true; gmEls.home.hidden = true;
@@ -2409,7 +2252,7 @@ function gmMenu() {
   gm.row = 1; gm.col = 0; gmCursor();
   isaacStop(); clearTimeout(Isaac.next);
   hostWave(1800); hostBlinks(true);
-  Voice.say('Let\'s play! Pick a game.');
+  Beat.after('Let\'s play! Pick a game.');
 }
 function gmStart(g) {
   Sfx.tap();
@@ -2419,8 +2262,7 @@ function gmStart(g) {
   gm.row = 1; gm.col = 0; gmCursor();
   hostBlinks(false);
   isaacQueue(true);
-  Voice.preload([g.name + '!'].concat(PRAISE));
-  Voice.say(g.name + '!', () => { if (gm.game === g && !gm.round) gmRound(); });
+  Beat.after(g.name + '!', () => { if (gm.game === g && !gm.round) gmRound(); });
 }
 function gmRound() {
   const g = gm.game;
@@ -2440,38 +2282,24 @@ function gmRound() {
     gmEls.choices.appendChild(b);
   });
   gm.row = 1; gm.col = 0; gm.idleN = 0; gmCursor();
-  Voice.preload([r.say, r.praise].concat(r.choices.map((c) => 'That\'s ' + c.said + '.'), r.lines || []));
   if (r.intro) r.intro(gmAsk); else gmAsk();
 }
 function gmAsk() {
   const r = gm.round;
   if (!r || r.done || !gm.open) return;
-  Voice.say(r.say);
   gmIdle();
 }
-// Nobody's tapped for a while: say it again, and after a couple of times give the right one a little wiggle.
-// After a few minutes of nothing it goes quiet.
+// Nobody's tapped for a while: give the right one a little wiggle, every 14 seconds for a few minutes.
 function gmIdle() {
   clearTimeout(gm.idleT);
   gm.idleT = setTimeout(() => {
     const r = gm.round;
     if (!gm.open || !r || r.done || gm.idleN >= 5) return;
     gm.idleN++;
-    if (gm.idleN >= (Voice.on ? 2 : 1)) {                       // without a voice, the nudge comes sooner
-      const b = gmEls.choices.children[r.choices.map((c) => c.key).indexOf(r.answer)];
-      if (b) { b.classList.remove('nudge'); void b.offsetWidth; b.classList.add('nudge'); }
-    }
-    Voice.say(r.say);
+    const b = gmEls.choices.children[r.choices.map((c) => c.key).indexOf(r.answer)];
+    if (b) { b.classList.remove('nudge'); void b.offsetWidth; b.classList.add('nudge'); }
     gmIdle();
   }, 14000);
-}
-function gmReplay() {
-  Sfx.tap();
-  if (gm.screen === 'menu') { Voice.say('Let\'s play! Pick a game: shapes, colors, numbers, letters, or words.'); return; }
-  const r = gm.round;
-  if (!r || r.done) return;
-  gm.idleN = 0;
-  if (r.intro) r.intro(gmAsk); else gmAsk();
 }
 function gmPick(i) {
   const r = gm.round, b = gmEls.choices.children[i];
@@ -2487,15 +2315,15 @@ function gmPick(i) {
     if (r.onRight) r.onRight(b);
     gmStar();
     const t0 = Date.now();
-    Voice.say([oneOf(PRAISE), r.praise], () => setTimeout(() => { if (gm.round === r) gmAfter(); }, Math.max(250, 1700 - (Date.now() - t0))));
+    Beat.after([oneOf(PRAISE), r.praise], () => setTimeout(() => { if (gm.round === r) gmAfter(); }, Math.max(250, 1700 - (Date.now() - t0))));
   } else {
     r.misses++;
     Sfx.oops();
     b.disabled = true;
     b.classList.remove('wrong'); void b.offsetWidth; b.classList.add('wrong');
     setTimeout(() => b.classList.add('dim'), 420);
-    if (r.onWrong && r.misses === 1) Voice.say('That\'s ' + c.said + '.', () => r.onWrong(gmIdle));
-    else { Voice.say(['That\'s ' + c.said + '.', r.say]); gmIdle(); }
+    if (r.onWrong && r.misses === 1) r.onWrong(gmIdle);
+    else gmIdle();
     gmCursor();
   }
 }
@@ -2509,7 +2337,7 @@ function gmAfter() {
   s.className = 'gm-super'; s.textContent = 'Superstar!';
   gmEls.root.appendChild(s);
   setTimeout(() => { if (s.parentNode) s.parentNode.removeChild(s); }, 2700);
-  Voice.say('Five stars! You\'re a superstar!', () => setTimeout(() => {
+  Beat.after('Five stars! You\'re a superstar!', () => setTimeout(() => {
     gm.stars = 0; gmStarsRender();
     if (gm.open && gm.round === r) gmRound();
   }, 900));
@@ -2541,7 +2369,7 @@ function gmBurst(b) {
 }
 // The TV remote: ◀ ▶ to move, ▲ to the buttons at the top, ▼ back to the cards, OK to pick, Back to go back.
 function gmRows() {
-  const top = [gmEls.tv, gmEls.home, gmEls.say].filter((b) => !b.hidden);
+  const top = [gmEls.tv, gmEls.home].filter((b) => !b.hidden);
   const body = [].slice.call(gm.screen === 'menu' ? gmEls.picks.children : gmEls.choices.children).filter((b) => !b.disabled);
   return [top, body];
 }
@@ -2577,11 +2405,10 @@ function gamesKey(k, code) {
 }
 gmEls.tv.addEventListener('click', (e) => { e.stopPropagation(); Sfx.tap(); closeGames(); });
 gmEls.home.addEventListener('click', (e) => { e.stopPropagation(); gmBack(); });
-gmEls.say.addEventListener('click', (e) => { e.stopPropagation(); gmReplay(); });
 gmEls.root.addEventListener('pointerdown', () => { if (gm.keys) { gm.keys = false; gmCursor(); } });
 gmEls.root.addEventListener('contextmenu', (e) => e.preventDefault());
 gmShowButton();
-window.smmGames = { open: openGames, close: closeGames, state: gm, isaac: isaacPlay, isaacState: Isaac, lines: () => gmAllLines().map((t) => [Voice.id(t), t]) };   // for testing
+window.smmGames = { open: openGames, close: closeGames, state: gm, isaac: isaacPlay, isaacState: Isaac };   // for testing
 
 renderGuide();
 const s = document.createElement('script');

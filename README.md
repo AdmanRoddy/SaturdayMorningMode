@@ -58,8 +58,7 @@ On a phone or tablet: swipe up or down to change channel, tap for the buttons.
 
 At the bottom of the guide, **Grown-ups** asks a times-table question with four big answers. Answer it and the
 settings show: captions, picture fill or fit, jump in mid-show, cover commercials, music during commercials,
-the learning games (on or off), the games voice (steps through the device's voices; best ones first) and its
-cartoon pitch, tilt for the marshmallows (phones and iPads; asks for motion access once each time the app opens), and
+the learning games (on or off), tilt for the marshmallows (phones and iPads; asks for motion access once each time the app opens), and
 YouTube's debug readout.
 They hide again as soon as the guide closes.
 
@@ -74,12 +73,12 @@ games made for 2 to 4 year olds:
 | Colors | Find the red (or blue, or green…) balloon; it floats away |
 | Numbers | Match 3 to 3, and later count the stars and pick how many |
 | Letters | Find the letter B |
-| Words | The voice spells C-A-T as the letters pop up; tap the cat |
+| Words | C-A-T pops up one letter at a time; tap the cat (each picture has its word under it) |
 
-The device reads every question out loud, so they don't need to read. A wrong tap says what it was ("That's the
-heart") and greys out, so they always get there; a right one gets a chime, sparkles and a star, and five stars
+The games don't talk: the pictures do the asking (a hole to fill, a paint splat to match, letters to spell),
+and the question is written at the top for grown-ups. A wrong tap wiggles and greys out, so they always get there; a right one gets a chime, sparkles and a star, and five stars
 bring a marshmallow shower. Each game starts with two choices and adds one after three right in a row (up to
-four), and drops one again after a tough question. Saying it again: the green speaker button. The red **TV**
+four), and drops one again after a tough question. If nobody taps for a while, the right answer gives a little wiggle. The red **TV**
 button goes back to the show where it left off.
 
 **Mr. Isaac**, the cow, hosts the games. He stands by the title on the menu and waves (tap him and he moos; he
@@ -91,18 +90,6 @@ until only his tail is left (and a few crumbs). He also bounces along when they 
 `index.html` so they can move. He sits still if the device is set to reduce motion.
 
 Grown-ups can turn the games off in the settings; the button, the guide entry and the Yellow key go away.
-
-### The games' voice
-
-The games are silent by default (the cards, pictures, chimes and stars do the talking). If a grown-up turns
-**Games voice** on, every line is a recorded clip in `voice/` (one MP3 per line, named by a hash of the line, listed in
-`voice/lines.js`). They were made with [Kokoro](https://github.com/thewh1teagle/kokoro-onnx), an open-source voice
-(the `af_heart` voice). A line without a clip falls back to the
-device's own voice. In the grown-up settings, **Games voice** steps through Off, the recorded voice and the device's
-voices (best ones first), and **Cartoon voice** pitches a device voice up.
-
-When the games get new lines, the clips need making again: `window.smmGames.lines()` in the browser console lists
-every line with its clip name; record the missing ones the same way and bump `VOICE_V` in `index.html`.
 
 ## What's different from BSO TV
 

@@ -286,6 +286,8 @@ body.touch .hint{display:none}
 .isaac{display:block;overflow:visible;pointer-events:none}
 .isaac .rig{pointer-events:visiblePainted}
 .gm-actor .isaac{position:absolute;left:0;top:0;will-change:transform}
+.gm-crumb{position:absolute;left:0;top:0;width:1.9vmin;height:1.4vmin;margin:-.7vmin 0 0 -.95vmin;border:.3vmin solid #251A2B;border-radius:45%;background:#FFF8EC;
+  transition:transform .55s cubic-bezier(.5,0,.85,.6), opacity .4s ease}
 .gm-head{display:flex;align-items:center;justify-content:center;margin:0 0 4vmin}
 .gm-host{flex:0 0 auto;width:21vmin;height:33.7vmin;margin-right:3vmin;cursor:pointer}
 .gm-host .isaac{width:100%;height:100%;transform-origin:52% 99%;animation:isaacIdle 2.6s ease-in-out infinite}
@@ -1639,6 +1641,20 @@ const Voice = (() => {
 // Chimes, made on the spot like the commercial-break music.
 const Sfx = (() => {
   const f = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  let buf = null;
+  function noise(len, type, from, to, vol) {   // a burst of filtered hiss: munching, whooshing
+    try {
+      const c = Lofi.ctx;
+      if (!c) return;
+      if (c.state === 'suspended' && c.resume) c.resume();
+      if (!buf) { buf = c.createBuffer(1, c.sampleRate, c.sampleRate); const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+      const t = c.currentTime + 0.02, src = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain();
+      src.buffer = buf; fl.type = type; fl.Q.value = 1.2;
+      fl.frequency.setValueAtTime(from, t); fl.frequency.exponentialRampToValueAtTime(to, t + len);
+      g.gain.value = 0; g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + Math.min(0.03, len / 3)); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+      src.connect(fl); fl.connect(g); g.connect(c.destination); src.start(t, Math.random() * 0.5); src.stop(t + len + 0.05);
+    } catch (e) { /* no sound chip */ }
+  }
   function play(notes) {
     try {
       const c = Lofi.ctx;
@@ -1660,6 +1676,10 @@ const Sfx = (() => {
     oops() { play([[f(67), 0, 0.17, 'sine', 0.12, f(64)], [f(62), 0.18, 0.28, 'sine', 0.12, f(58)]]); },
     yay() { play([60, 64, 67, 72, 67, 72, 76, 79].map((m, i) => [f(m), i * 0.1, i === 7 ? 0.9 : 0.22, 'triangle', 0.13]).concat([[f(84), 0.7, 0.9, 'sine', 0.05]])); },
     whistle(up) { play([[up ? 700 : 1500, 0, 0.32, 'sine', 0.07, up ? 1500 : 700]]); },   // Mr. Isaac peeking in, and ducking out
+    gulp() { play([[520, 0, 0.18, 'sine', 0.14, 170], [300, 0.2, 0.09, 'sine', 0.06, 520]]); },
+    tip() { play([[1250, 0, 0.05, 'sine', 0.035]]); },
+    nom() { noise(0.09, 'bandpass', 900, 900, 0.22); play([[140, 0, 0.12, 'sine', 0.12, 90]]); },
+    whoosh() { noise(0.32, 'bandpass', 400, 2600, 0.14); },
     // a cartoon moo: a buzzy low note that opens up ("mm-ooo") and sags at the end
     moo() {
       try {
@@ -1889,6 +1909,13 @@ function isaacSvg(cls) {
     + A.art
     + '<path d="' + A.outline + '" fill="none" ' + S + ' stroke-width="5.5"/>'
     + '<path d="M241 401L282 405L262 437Z" fill="#E75B8C" ' + S + ' stroke-width="4.5"/>'
+    + '<g class="i-snack" style="display:none">'
+    + '<g class="i-mm-whole"><path d="M-48 -40V40A48 14 0 0 0 48 40V-40Z" fill="#FFFDF7"/><path d="M22 -34V45A48 14 0 0 0 44 37V-34Z" fill="#EFE6DA"/>'
+    + '<path d="M-48 -40V40A48 14 0 0 0 48 40V-40" fill="none" ' + S + ' stroke-width="5"/><ellipse cx="0" cy="-40" rx="48" ry="14" fill="#fff" ' + S + ' stroke-width="5"/>'
+    + '<path d="M-34 -18V24" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/></g>'
+    + '<g class="i-mm-bit" style="display:none"><path d="M-48 40V-4Q-40 -2 -38 -12Q-30 -10 -27 -22Q-19 -20 -15 -31Q-7 -30 -2 -41Q2 -48 4 -54A48 14 0 0 1 48 -40V40A48 14 0 0 1 -48 40Z" fill="#FFFDF7" ' + S + ' stroke-width="5"/>'
+    + '<path d="M22 -36V45A48 14 0 0 0 44 37V-36Z" fill="#EFE6DA"/><path d="M4 -54A48 14 0 0 1 48 -40A48 14 0 0 1 -18 -27Q-9 -32 -6 -38Q0 -46 4 -54Z" fill="#fff" ' + S + ' stroke-width="4"/>'
+    + '<path d="M48 -40V40A48 14 0 0 1 -48 40" fill="none" ' + S + ' stroke-width="5"/></g></g>'
     + arm('i-armL') + arm('i-armR')
     // eyes that blink and look around, and a laughing mouth that covers the smile when it's open
     + '<g class="i-eyeL"><ellipse cx="125" cy="147" rx="19.5" ry="23.5" fill="#fff" ' + S + ' stroke-width="5"/><g class="i-pupil"><ellipse cx="128.5" cy="150.4" rx="12.5" ry="15.5" fill="' + IK + '"/><circle cx="135.3" cy="143.6" r="4.2" fill="#fff"/></g></g>'
@@ -1897,6 +1924,12 @@ function isaacSvg(cls) {
     + '<path class="i-happyR" d="M209 163Q230.5 140 252 163" fill="none" ' + S + ' stroke-width="5.5" style="display:none"/>'
     + '<g class="i-laugh" style="display:none"><path d="M126 247Q170 249 216 232Q213 291 170 294Q131 292 126 247Z" fill="#5B2333" ' + S + ' stroke-width="5"/>'
     + '<path d="M146 283Q171 268 197 280Q187 293 170 294Q154 293 146 283Z" fill="#E8697A"/></g>'
+    + '<g class="i-mouths" style="display:none"><ellipse cx="172" cy="256" rx="42" ry="14" fill="#F3BD92"/>'
+    + '<path class="i-m-chew" d="M150 258Q160 250 170 258Q180 266 190 258" fill="none" ' + S + ' stroke-width="5"/>'
+    + '<ellipse class="i-m-o" cx="170" cy="261" rx="10" ry="13" fill="#5B2333" ' + S + ' stroke-width="4.5"/>'
+    + '<ellipse class="i-m-small" cx="170" cy="259" rx="6" ry="6.5" fill="#5B2333" ' + S + ' stroke-width="4"/>'
+    + '<path class="i-m-wavy" d="M146 262Q154 255 162 262Q170 269 178 262Q186 255 194 262" fill="none" ' + S + ' stroke-width="5"/></g>'
+    + '<path class="i-sweat" d="M290 92Q279 112 284 120Q290 128 296 120Q301 112 290 92Z" fill="#9AD8F5" ' + S + ' stroke-width="3.5" style="display:none"/>'
     + '</g></svg>';
 }
 // Put him in a pose. Arms and legs: 0 = hanging down, positive = lifted out to his side (about 150 = up in a V).
@@ -1905,7 +1938,9 @@ function isaacSvg(cls) {
 function isaacPose(el, p) {
   const q = (s) => el.querySelector(s);
   if (!el._parts) el._parts = { armL: q('.i-armL'), armR: q('.i-armR'), legL: q('.i-legL'), legR: q('.i-legR'), tail: q('.i-tail'),
-    eyeL: q('.i-eyeL'), eyeR: q('.i-eyeR'), happyL: q('.i-happyL'), happyR: q('.i-happyR'), laugh: q('.i-laugh'), pupils: el.querySelectorAll('.i-pupil') };
+    eyeL: q('.i-eyeL'), eyeR: q('.i-eyeR'), happyL: q('.i-happyL'), happyR: q('.i-happyR'), laugh: q('.i-laugh'), pupils: el.querySelectorAll('.i-pupil'),
+    snack: q('.i-snack'), mmWhole: q('.i-mm-whole'), mmBit: q('.i-mm-bit'), mouths: q('.i-mouths'), sweat: q('.i-sweat'),
+    m: { chew: q('.i-m-chew'), o: q('.i-m-o'), small: q('.i-m-small'), wavy: q('.i-m-wavy') } };
   const P = el._parts, f = (n) => (n || 0).toFixed(2);
   P.armL.setAttribute('transform', 'translate(112 372) rotate(' + f(14 + (p.armL || 0)) + ')');
   P.armR.setAttribute('transform', 'translate(322 372) rotate(' + f(-14 - (p.armR || 0)) + ')');
@@ -1916,11 +1951,24 @@ function isaacPose(el, p) {
   const happyL = !!(p.happy || p.wink), happyR = !!p.happy;
   P.eyeL.style.display = happyL ? 'none' : ''; P.happyL.style.display = happyL ? '' : 'none';
   P.eyeR.style.display = happyR ? 'none' : ''; P.happyR.style.display = happyR ? '' : 'none';
-  P.eyeL.setAttribute('transform', 'translate(0 ' + (147 * (1 - b)).toFixed(2) + ') scale(1 ' + b.toFixed(3) + ')');
-  P.eyeR.setAttribute('transform', 'translate(0 ' + (156 * (1 - b)).toFixed(2) + ') scale(1 ' + b.toFixed(3) + ')');
-  const lx = (p.look || 0) * 5, ly = (p.lookY || 0) * 5;
-  for (let i = 0; i < P.pupils.length; i++) P.pupils[i].setAttribute('transform', 'translate(' + lx.toFixed(2) + ' ' + ly.toFixed(2) + ')');
+  const ws = 1 + 0.16 * (p.wide || 0), ps = 1 - 0.3 * (p.wide || 0);           // wide eyes, small pupils
+  P.eyeL.setAttribute('transform', 'translate(' + f(125 * (1 - ws)) + ' ' + f(147 * (1 - ws * b)) + ') scale(' + ws.toFixed(3) + ' ' + (ws * b).toFixed(3) + ')');
+  P.eyeR.setAttribute('transform', 'translate(' + f(230.5 * (1 - ws)) + ' ' + f(156 * (1 - ws * b)) + ') scale(' + ws.toFixed(3) + ' ' + (ws * b).toFixed(3) + ')');
+  const lx = (p.look || 0) * 5, ly = (p.lookY || 0) * 5, PC = [[128.5, 150.4], [233.7, 160.3]];
+  for (let i = 0; i < P.pupils.length; i++) P.pupils[i].setAttribute('transform', 'translate(' + f(lx + PC[i][0] * (1 - ps)) + ' ' + f(ly + PC[i][1] * (1 - ps)) + ') scale(' + ps.toFixed(3) + ')');
   P.laugh.style.display = p.oh ? '' : 'none';
+  const m = p.oh ? '' : (p.mouth || '');
+  P.mouths.style.display = m ? '' : 'none';
+  for (const k in P.m) P.m[k].style.display = m === k ? '' : 'none';
+  if (m === 'chew') { const c = 1 + 0.7 * Math.sin(p.chew || 0); P.m.chew.setAttribute('transform', 'translate(0 ' + f(258 * (1 - c)) + ') scale(1 ' + c.toFixed(3) + ')'); }
+  P.sweat.style.display = p.sweat ? '' : 'none';
+  if (p.sweat) P.sweat.style.opacity = Math.min(1, p.sweat);
+  const sn = p.snack;
+  P.snack.style.display = sn ? '' : 'none';
+  if (sn) {
+    P.snack.setAttribute('transform', 'translate(' + f(sn.x) + ' ' + f(sn.y) + ') rotate(' + f(sn.r) + ') scale(1.15)');
+    P.mmWhole.style.display = sn.bit ? 'none' : ''; P.mmBit.style.display = sn.bit ? '' : 'none';
+  }
 }
 const REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 const Isaac = { el: null, host: null, act: null, raf: 0, next: 0, react: 0, last: '', music: null, hostRaf: 0, hostBlink: 0 };
@@ -1970,6 +2018,54 @@ const ISAAC_ACTS = {
       return { x: x, y: lerp(low, top, 4 * k * (1 - k)), rot: i === 1 ? 360 * ease(k) * (x < W / 2 ? 1 : -1) : 5 * Math.sin(k * Math.PI * 2),
         armL: 140 * air, armR: 140 * air, legL: 28 * air, legR: 28 * air, lookY: k < 0.5 ? -1 : 1, oh: air > 0.6, happy: air > 0.9, tail: 30 * air };
     } };
+  },
+  // He wanders in with a big marshmallow and has a bite, chews, notices everyone watching, freezes, and tiptoes
+  // back out with his eyes on them, until only the tip of his tail is left at the edge. Then it's gone too.
+  snack(W, H, w, h, u) {
+    const dir = Math.random() < 0.5 ? 1 : -1;                 // 1: in from the left, and back out the left
+    const X = (x) => (dir > 0 ? x : W - x);
+    const spot = W * 0.17, spot2 = spot + W * 0.05, gone = -0.33 * w, x0 = -0.62 * w;
+    const HOLD = { x: 235, y: 432, r: -6 }, BITE = { x: 200, y: 305, r: 8 };
+    const a = { dur: 13000, origin: [0.52, 0.991], crumbs: 3000, steps: [],
+      sounds: [[3000, 'nom'], [3180, 'nom'], [5450, 'gulp'], [12350, 'whoosh']] };
+    for (let t = 7900; t < 11500; t += 330) a.steps.push(t);   // tiptoe, tiptoe...
+    a.pose = (t) => {
+      let p, x;
+      const snack = { x: HOLD.x, y: HOLD.y, r: HOLD.r, bit: t >= 3000 }, arms = [-68, -44];
+      if (t < 2600) {                                            // prancing in, all smiles
+        const ph = t / 190 * Math.PI, s = Math.sin(ph);
+        p = { legL: 18 * s, legR: -18 * s, feet: Math.abs(Math.cos(ph)) * 2.4 * u, rot: 5 * s, oh: true, look: 0.6, tail: 22 * Math.sin(ph / 2) };
+        x = lerp(x0, spot, t / 2600);
+      } else if (t < 3600) {                                     // a big bite
+        const up = seg(t, 2600, 2950) * (1 - seg(t, 3200, 3600));
+        p = { happy: t > 2800 && t < 3500, look: 0.3, tail: 10 * Math.sin(t / 120) };
+        snack.x = lerp(HOLD.x, BITE.x, up); snack.y = lerp(HOLD.y, BITE.y, up); snack.r = lerp(HOLD.r, BITE.r, up);
+        arms[0] = lerp(-68, -163, up); arms[1] = lerp(-44, -146, up);
+        if (t > 3200) { p.mouth = 'chew'; p.chew = t / 90; }
+        x = spot;
+      } else if (t < 5400) {                                     // chewing, a few slow steps, and he stops
+        const s = t < 5000 ? Math.sin((t - 3600) / 300 * Math.PI) : 0;
+        p = { legL: 10 * s, legR: -10 * s, feet: Math.abs(s) * 0.8 * u, rot: 3 * s, mouth: 'chew', chew: t / 90, look: 0.7, tail: 12 * Math.sin(t / 200) };
+        x = lerp(spot, spot2, seg(t, 3600, 5000));
+      } else if (t < 7200) {                                     // oh! he sees us... and freezes
+        const j = (t - 5400) / 220;
+        p = { wide: 1, mouth: t < 5650 ? 'o' : 'small', sweat: seg(t, 5900, 6200) };
+        if (j < 1) { p.feet = Math.sin(j * Math.PI) * 3 * u; p.sy = 1 + 0.05 * Math.sin(j * Math.PI); }
+        if (t > 6600 && t < 6950) p.blink = Math.sin((t - 6600) / 350 * Math.PI);   // one slow blink
+        x = spot2;
+      } else if (t < 11600) {                                    // and tiptoes away, keeping an eye on us
+        const s = t > 7700 ? Math.sin((t - 7200) / 330 * Math.PI) : 0;
+        p = { wide: 0.5, mouth: 'wavy', sweat: 1, legL: 7 * s, legR: -7 * s, rot: -3 + 2 * s, look: t > 8800 && t < 9300 ? -1 : 0 };
+        x = t < 7700 ? spot2 - seg(t, 7200, 7700) * W * 0.01 : lerp(spot2 - W * 0.01, gone, (t - 7700) / 3900);
+      } else {                                                   // only the tip of his tail is left... then that's gone too
+        p = { tail: t < 12350 ? 14 * Math.sin((t - 11600) / 160) : 0, mouth: 'wavy' };
+        x = t < 12350 ? gone : lerp(gone, -1.3 * w, seg(t, 12350, 12650));
+      }
+      p.armL = arms[0]; p.armR = arms[1]; p.snack = snack;
+      p.x = X(x); p.y = H - (p.feet || 0); p.sx = dir; p.rot = (p.rot || 0) * dir;
+      return p;
+    };
+    return a;
   },
   peek(W, H, w, h, u) {
     const r = Math.random(), side = r < 0.4 ? 'left' : r < 0.8 ? 'right' : 'top', twice = Math.random() < 0.35;
@@ -2046,7 +2142,10 @@ function isaacStep(now) {
   if (a.bounces) { const i = Math.floor(t / a.hop); if (i < a.bounces && !a.done['b' + i]) { a.done['b' + i] = 1; Sfx.boing(); } }
   if (a.peeks) a.peeks.forEach((s, i) => { if (t >= s && !a.done['p' + i]) { a.done['p' + i] = 1; Sfx.whistle(true); } });
   if (a.peeks && t >= a.dur - 420 && !a.done.out) { a.done.out = 1; Sfx.whistle(false); }
+  if (a.sounds) a.sounds.forEach((s, i) => { if (t >= s[0] && !a.done['s' + i]) { a.done['s' + i] = 1; Sfx[s[1]](); } });
+  if (a.steps) a.steps.forEach((s, i) => { if (t >= s && !a.done['t' + i]) { a.done['t' + i] = 1; Sfx.tip(); } });
   const p = a.pose(t);
+  if (a.crumbs != null && t >= a.crumbs && !a.done.crumbs) { a.done.crumbs = 1; isaacCrumbs(a, p); }
   if (p.blink == null) { const bt = t % 3100; p.blink = bt < 140 ? Math.sin(bt / 140 * Math.PI) : 0; }
   let bump = 0;
   if (Isaac.react) {                                   // tapped: a happy hop and an "oh!"
@@ -2059,7 +2158,24 @@ function isaacStep(now) {
   isaacPose(Isaac.el, p);
   Isaac.raf = requestAnimationFrame(isaacStep);
 }
+// Marshmallow crumbs: they fall from the bite to the floor and stay until he's gone.
+function isaacCrumbs(a, p) {
+  const sx = p.sx == null ? 1 : p.sx;
+  const mx = p.x + sx * (195 / 430 - a.origin[0]) * a.w, my = p.y - a.origin[1] * a.h + 275 / 690 * a.h;
+  for (let i = 0; i < 5; i++) {
+    const c = document.createElement('i');
+    c.className = 'gm-crumb';
+    c.style.transform = 'translate(' + (mx + (Math.random() - 0.5) * 3 * a.u).toFixed(1) + 'px,' + my.toFixed(1) + 'px)';
+    gmEls.actor.appendChild(c);
+    const fx = mx + (Math.random() - 0.5) * 14 * a.u, fy = a.H - (0.5 + Math.random() * 0.8) * a.u, rot = Math.round(Math.random() * 180);
+    setTimeout(() => { c.style.transform = 'translate(' + fx.toFixed(1) + 'px,' + fy.toFixed(1) + 'px) rotate(' + rot + 'deg)'; }, 30 + i * 60);
+  }
+}
+function isaacSweep() {
+  [].forEach.call(gmEls.actor.querySelectorAll('.gm-crumb'), (c) => { c.style.opacity = '0'; setTimeout(() => { if (c.parentNode) c.parentNode.removeChild(c); }, 450); });
+}
 function isaacStop() {
+  isaacSweep();
   Isaac.act = null;
   cancelAnimationFrame(Isaac.raf); Isaac.raf = 0;
   if (Isaac.el) Isaac.el.style.display = 'none';
@@ -2071,7 +2187,7 @@ function isaacQueue(soon) {
   if (!gm.open || REDUCED) return;
   Isaac.next = setTimeout(() => {
     if (!gm.open || gm.screen !== 'play') return;
-    const pick = () => { const r = Math.random(); return r < 0.4 ? 'peek' : r < 0.7 ? 'ballet' : 'trampoline'; };
+    const pick = () => { const r = Math.random(); return r < 0.3 ? 'peek' : r < 0.52 ? 'ballet' : r < 0.72 ? 'trampoline' : 'snack'; };
     let name = pick();
     if (name === Isaac.last) name = pick();
     if (!isaacPlay(name)) isaacQueue();

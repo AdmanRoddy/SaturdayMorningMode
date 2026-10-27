@@ -237,8 +237,117 @@ body.touch .hint{display:none}
 .dvd .logo.corner{animation:corner .9s cubic-bezier(.3,1.6,.5,1)}
 @keyframes corner{0%{transform:scale(1)}30%{transform:scale(1.25) rotate(-6deg)}60%{transform:scale(.95) rotate(4deg)}100%{transform:none}}
 
+/* ---------- learning games: big, simple and read out loud, for 2 to 4 year olds ---------- */
+/* sized by the screen's short side (vmin), so the same layout fits a TV, an iPad and a phone */
+.ch-btns button[hidden]{display:none}
+#btn-games svg{width:3rem;height:3rem}
+/* iPads held sideways: slightly smaller buttons, so the channel name keeps its room */
+@media (max-width:1320px) and (min-aspect-ratio:1/1){
+  .ch-btns{margin-left:.6rem}
+  .ch-btns button{margin-left:.55rem;width:4.4rem;height:4.4rem}
+  .ch-btns button.wide{padding:0 1rem;font-size:1.4rem}
+  .banner{padding-right:1.2rem}
+}
+.games-row .t b:nth-child(1){color:#D52B1E}
+.games-row .t b:nth-child(2){color:#2753A6}
+.games-row .t b:nth-child(3){color:#3DAA4A}
+.games-row .t b:nth-child(4){color:#F28A00}
+.games-row .t b:nth-child(5){color:#8A4FC7}
+.games-row .t b{font-weight:400}
+.row.games-row{margin-top:2.2rem}
+.row.games-row .n{background:var(--yellow)}
+.hint.nogames .hg{display:none}
+.games{position:fixed;top:0;right:0;bottom:0;left:0;z-index:11;display:flex;flex-direction:column;overflow:hidden;background:var(--blue);color:var(--ink);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.games[hidden]{display:none}
+.games .confetti{opacity:.28}
+.gm-top{position:relative;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:2.6vmin 3.2vmin 0}
+.gm-side{display:flex;align-items:center}
+.gm-btn{flex:0 0 auto;display:flex;align-items:center;justify-content:center;height:11vmin;min-width:11vmin;margin-right:2.2vmin;padding:0 3vmin;border:.6vmin solid var(--ink);border-radius:6vmin;
+  box-shadow:.8vmin .8vmin 0 var(--ink);font-family:'Luckiest Guy','Arial Black',Impact,sans-serif;font-weight:400;font-size:4.6vmin;cursor:pointer}
+.gm-btn[hidden]{display:none}
+.gm-btn.round{width:11vmin;padding:0}
+.gm-side.right .gm-btn{margin:0 0 0 2.2vmin}
+.gm-btn svg{flex:0 0 auto;width:6.2vmin;height:6.2vmin}
+.gm-btn .lbl{margin-left:1.4vmin;padding-top:.7vmin}
+.gm-stars{position:absolute;left:50%;top:2.6vmin;height:11vmin;display:flex;align-items:center;transform:translateX(-50%);pointer-events:none}
+.gm-stars svg{width:8vmin;height:8vmin;margin:0 .5vmin}
+.gm-stars path{fill:rgba(255,255,255,.22);stroke:var(--ink);stroke-width:6;stroke-linejoin:round;transition:fill .2s ease}
+.gm-stars .on path{fill:var(--yellow)}
+.gm-stars .on{animation:gmPop .45s cubic-bezier(.3,1.6,.5,1)}
+.gm-body{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;padding:0 3vmin 3vmin;overflow:hidden}
+.gm-menu,.gm-play{width:100%;margin:auto 0;display:flex;flex-direction:column;align-items:center}
+.gm-menu[hidden],.gm-play[hidden]{display:none}
+.gm-title{margin:0 0 5vmin;font-size:9vmin}
+.gm-picks{display:flex;flex-wrap:wrap;justify-content:center}
+.gm-pick{width:24vmin;height:29vmin;margin:1.6vmin;padding:0;border:.7vmin solid var(--ink);border-radius:4vmin;box-shadow:1.2vmin 1.2vmin 0 var(--ink);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;animation:gmIn .45s cubic-bezier(.3,1.5,.5,1) both}
+.gm-pick .art{height:15vmin;display:flex;align-items:center;justify-content:center}
+.gm-pick .art svg{width:20vmin;height:15vmin}
+.gm-pick .art-txt{font-family:'Luckiest Guy','Arial Black',Impact,sans-serif;font-size:11vmin;line-height:1;padding-top:2vmin;letter-spacing:.02em;text-shadow:.5vmin .5vmin 0 var(--ink)}
+.gm-pick .art-txt b{font-weight:400}
+.gm-pick .art .emo{font-size:12vmin;line-height:1}
+.gm-pick .nm{margin-top:2.2vmin;font-family:'Luckiest Guy','Arial Black',Impact,sans-serif;font-size:5vmin;line-height:1}
+.gm-prompt{margin:0 0 2.6vmin;min-height:7.4vmin;font-family:'Luckiest Guy','Arial Black',Impact,sans-serif;font-size:6.6vmin;line-height:1.1;color:var(--white);text-shadow:.6vmin .6vmin 0 var(--ink);text-align:center}
+.gm-target{height:31vmin;margin-bottom:3.6vmin;display:flex;align-items:center;justify-content:center}
+.gm-target > *{animation:gmIn .4s cubic-bezier(.3,1.5,.5,1) both}
+.gm-slot{width:31vmin;height:31vmin}
+.gm-slot svg{display:block;width:100%;height:100%}
+.gm-glyph{width:31vmin;height:31vmin;padding-top:3.4vmin;border:.8vmin dashed rgba(255,255,255,.85);border-radius:4.5vmin;display:flex;align-items:center;justify-content:center;
+  font-family:'Luckiest Guy','Arial Black',Impact,sans-serif;font-size:24vmin;line-height:1;color:transparent;-webkit-text-stroke:.7vmin rgba(255,255,255,.9)}
+.gm-glyph.full{border:.7vmin solid var(--ink);background:var(--white);box-shadow:1.2vmin 1.2vmin 0 var(--ink);-webkit-text-stroke:0;text-shadow:.6vmin .6vmin 0 var(--ink)}
+.gm-count{max-width:76vmin;padding:1.6vmin 2.6vmin;display:flex;flex-wrap:wrap;justify-content:center;border:.7vmin solid var(--ink);border-radius:4.5vmin;background:var(--white);box-shadow:1.2vmin 1.2vmin 0 var(--ink)}
+.gm-count svg{width:11.5vmin;height:11.5vmin;margin:.8vmin}
+.gm-count svg.hop{animation:gmHop .5s ease}
+.gm-tiles{display:flex;align-items:center}
+.gm-tile{width:16vmin;height:20vmin;margin:0 1.1vmin;padding-top:2vmin;border:.7vmin solid var(--ink);border-radius:3vmin;background:rgba(255,255,255,.28);box-shadow:.9vmin .9vmin 0 var(--ink);
+  display:flex;align-items:center;justify-content:center;font-family:'Luckiest Guy','Arial Black',Impact,sans-serif;font-size:14vmin;line-height:1;transition:transform .15s ease}
+.gm-tile.on{background:var(--white);animation:gmPop .35s cubic-bezier(.3,1.6,.5,1)}
+.gm-tile.hi{transform:translateY(-2.2vmin) scale(1.08)}
+.gm-tiles .emo{margin-left:3vmin;font-size:17vmin;line-height:1;animation:gmPop .45s cubic-bezier(.3,1.6,.5,1)}
+.emo{font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji','Twemoji Mozilla',sans-serif;font-weight:400}
+.gm-choices{display:flex;flex-wrap:wrap;justify-content:center;align-items:center}
+.gm-card{position:relative;width:26vmin;height:26vmin;margin:1.4vmin 1.8vmin;padding:0;border:.7vmin solid var(--ink);border-radius:4.5vmin;background:var(--white);color:var(--ink);
+  box-shadow:1.2vmin 1.2vmin 0 var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;animation:gmIn .4s cubic-bezier(.3,1.5,.5,1) both}
+.gm-card svg{width:76%;height:76%}
+.gm-card .glyph{font-family:'Luckiest Guy','Arial Black',Impact,sans-serif;font-size:18vmin;line-height:1;padding-top:2.6vmin;text-shadow:.6vmin .6vmin 0 var(--ink)}
+.gm-card .emo{font-size:13vmin;line-height:1.05}
+.gm-card .word{margin-top:.8vmin;font-family:'Luckiest Guy','Arial Black',Impact,sans-serif;font-size:4.4vmin;line-height:1;letter-spacing:.08em}
+.gm-card.hint{animation:gmHint 1s ease 2}
+.gm-card.wrong{animation:gmShake .45s ease}
+.gm-card.dim{opacity:.3}
+.gm-card.right{z-index:3;animation:gmYay .7s ease}
+.gm-card.float{z-index:3;animation:gmFloat 1.8s ease-in both}
+.gm-card.flying{z-index:5;animation:none;background:transparent;border-color:transparent;box-shadow:none;
+  transition:transform .55s cubic-bezier(.45,0,.3,1.25), opacity .2s ease, background-color .15s ease, border-color .15s ease, box-shadow .15s ease}
+.gm-btn.cursor,.gm-pick.cursor,.gm-card.cursor{outline:.8vmin solid var(--white);outline-offset:.8vmin}
+.gm-spark{position:fixed;left:0;top:0;z-index:12;width:3vmin;height:3vmin;margin:-1.5vmin 0 0 -1.5vmin;border:.4vmin solid var(--ink);border-radius:50%;pointer-events:none;
+  transition:transform .75s cubic-bezier(.2,.7,.3,1), opacity .45s ease .35s}
+.gm-super{position:fixed;left:50%;top:48%;z-index:12;padding:2.6vmin 5vmin 1vmin;border:.8vmin solid var(--ink);border-radius:4vmin;background:var(--yellow);color:var(--ink);
+  box-shadow:1.4vmin 1.4vmin 0 var(--ink);font-family:'Luckiest Guy','Arial Black',Impact,sans-serif;font-size:12vmin;line-height:1;white-space:nowrap;pointer-events:none;
+  animation:gmSuper 2.6s cubic-bezier(.3,1.5,.5,1) both}
+body.gaming .mallow{z-index:12}
+@keyframes gmIn{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+@keyframes gmPop{0%{transform:scale(.5)}60%{transform:scale(1.18)}100%{transform:none}}
+@keyframes gmShake{20%{transform:translateX(-2.4vmin) rotate(-4deg)}40%{transform:translateX(2vmin) rotate(3deg)}60%{transform:translateX(-1.4vmin)}80%{transform:translateX(.8vmin)}}
+@keyframes gmYay{30%{transform:scale(1.22) rotate(-4deg)}60%{transform:scale(.96) rotate(3deg)}100%{transform:none}}
+@keyframes gmFloat{0%{transform:none}15%{transform:scale(1.12)}100%{transform:translateY(-120vh) rotate(8deg)}}
+@keyframes gmHop{40%{transform:translateY(-3vmin) scale(1.2)}}
+@keyframes gmHint{50%{transform:scale(1.12)}}
+@keyframes gmSuper{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-12deg)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.1) rotate(3deg)}
+  25%{transform:translate(-50%,-50%) rotate(-2deg)}85%{opacity:1;transform:translate(-50%,-50%) rotate(-2deg)}100%{opacity:0;transform:translate(-50%,-50%) scale(.8) rotate(-2deg)}}
+
 /* ---------- phones held upright ---------- */
 @media (max-aspect-ratio:1/1){
+  .gm-top{flex-wrap:wrap}
+  .gm-stars{position:static;order:3;flex:1 1 100%;justify-content:center;margin-top:2.4vmin;transform:none}
+  .gm-pick{width:28vmin;height:32vmin;margin:1.4vmin}
+  .gm-target{height:35vmin}
+  .gm-slot,.gm-glyph{width:35vmin;height:35vmin}
+  .gm-glyph{font-size:27vmin}
+  .gm-card{width:30vmin;height:30vmin}
+  .gm-card .glyph{font-size:21vmin}
+  .gm-card .emo{font-size:15vmin}
   .bug{font-size:1.4rem;right:1rem;top:1rem}
   .banner{left:.9rem;right:.9rem;bottom:.9rem;bottom:calc(.9rem + env(safe-area-inset-bottom));flex-wrap:wrap;padding:1rem 1rem 1.1rem 6.8rem;border-radius:1.4rem}
   .ch-num{left:-.6rem;top:-1.6rem;margin-top:0;width:7rem;height:7rem}
@@ -301,10 +410,11 @@ body.touch .hint{display:none}
     <button id="btn-restart" class="wide p-red">Start over</button>
     <button id="btn-guide" class="wide p-yellow">Guide</button>
     <button id="btn-sound" class="wide p-green">Mute</button>
+    <button id="btn-games" class="p-white" aria-label="Games"><svg viewBox="0 0 52 50" aria-hidden="true"><g transform="translate(13 0) scale(.26)" fill="#2753A6" stroke="#1D1230" stroke-width="10" stroke-linejoin="round"><path d="M50 9L93 87H7Z"/></g><g transform="translate(0 24) scale(.25)" fill="#F7C31A" stroke="#1D1230" stroke-width="10" stroke-linejoin="round"><circle cx="50" cy="50" r="41"/></g><g transform="translate(26 24) scale(.26)" fill="#D52B1E" stroke="#1D1230" stroke-width="10" stroke-linejoin="round"><path d="M50 89C20 67 6 51 6 33C6 18 17 9 30 9C40 9 46 15 50 23C54 15 60 9 70 9C83 9 94 18 94 33C94 51 80 67 50 89Z"/></g></svg></button>
     <button id="btn-mallow" class="p-white" aria-label="Marshmallows"><svg viewBox="9 9 46 46" aria-hidden="true"><path d="M13 19V45A19 7 0 0 0 51 45V19Z" fill="url(#ms-side-pink)" stroke="#1D1230" stroke-width="2.4"/><ellipse cx="32" cy="19" rx="19" ry="7" fill="url(#ms-top-pink)" stroke="#1D1230" stroke-width="2.4"/><ellipse cx="25.5" cy="17" rx="6" ry="2" fill="#fff" opacity=".8"/></svg></button>
   </div>
 </section>
-<div class="hint hide" id="hint"><span class="key">▲ ▼</span>Channels<span class="key">OK</span>Guide<span class="key">◀</span>Last channel<span class="key">▶</span>Start over<span class="key green">●</span>Marshmallows</div>
+<div class="hint hide" id="hint"><span class="key">▲ ▼</span>Channels<span class="key">OK</span>Guide<span class="key">◀</span>Last channel<span class="key">▶</span>Start over<span class="key hg">●</span><span class="hg">Games</span><span class="key green">●</span>Marshmallows</div>
 
 <aside class="guide" id="guide" aria-label="Channel guide">
   <div class="confetti"></div>
@@ -326,6 +436,31 @@ body.touch .hint{display:none}
 
 <div class="notice" id="notice" hidden><h2 id="n-title"></h2><p id="n-text"></p></div>
 <div class="numentry" id="numentry" hidden></div>
+
+<div class="games" id="games" hidden>
+  <div class="confetti"></div>
+  <div class="gm-top">
+    <div class="gm-side">
+      <button class="gm-btn p-red" id="gm-tv" type="button" aria-label="Back to TV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l4 4 4-4"/><rect x="2.5" y="7" width="19" height="14" rx="3" fill="#fff" stroke="#1D1230"/></svg><span class="lbl">TV</span></button>
+      <button class="gm-btn round p-yellow" id="gm-home" type="button" aria-label="Pick another game" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2.2"/><rect x="13" y="3" width="8" height="8" rx="2.2"/><rect x="3" y="13" width="8" height="8" rx="2.2"/><rect x="13" y="13" width="8" height="8" rx="2.2"/></svg></button>
+    </div>
+    <div class="gm-stars" id="gm-stars" aria-hidden="true"></div>
+    <div class="gm-side right">
+      <button class="gm-btn round p-green" id="gm-say" type="button" aria-label="Say it again"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L13 19V5L7.5 9.5z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>
+    </div>
+  </div>
+  <div class="gm-body">
+    <div class="gm-menu" id="gm-menu">
+      <div class="logo gm-title" aria-label="Let's play!"><span class="w w1">Let's</span><span class="w w2">play!</span></div>
+      <div class="gm-picks" id="gm-picks"></div>
+    </div>
+    <div class="gm-play" id="gm-play" hidden>
+      <p class="gm-prompt" id="gm-prompt" aria-live="polite"></p>
+      <div class="gm-target" id="gm-target"></div>
+      <div class="gm-choices" id="gm-choices"></div>
+    </div>
+  </div>
+</div>
 
 <div id="boot">
   <div class="confetti"></div>
@@ -419,6 +554,8 @@ let resume = null;                      // what was playing when the player was 
 let watchdog = 0, ytBlocked = false;
 let grownUps = false;                   // settings shown in the guide (until the guide closes)
 let gateOpen = false, gateAnswer = 0, gateCursor = 0;
+let gamesOn = store.get('games', true) !== false;   // the learning games (grown-up switch)
+const gm = { open: false, screen: 'menu', game: null, round: null, last: null, stars: 0, wasPlaying: false, row: 1, col: 0, keys: false, idleT: 0, idleN: 0, lv: store.get('gmlv', {}) || {} };
 
 /* ---------- schedule ---------- */
 // Same channel + same 15-minute slot => same show, so flipping away and back feels like live TV, and a
@@ -537,6 +674,7 @@ function onStateChange(e) {
   dbg('state ' + s + (prog.vid ? ' ' + prog.vid : ''));
   if (PHONE()) setTimeout(repaintPlayer, 500);
   if (s === YT.PlayerState.PLAYING) {
+    if (gm.open) { try { player.pauseVideo(); } catch (err) { /* busy */ } gm.wasPlaying = true; }   // the games are up: the show waits
     if (IOS) tapDone();
     hideNotice();
     setPaused(false);
@@ -659,7 +797,8 @@ function adBreak(on, now) {
     clearTimeout(bannerTimer); els.banner.classList.add('hide'); els.hint.classList.add('hide'); document.body.classList.remove('ui');   // the slate has the screen to itself
     if (CHANNELS[chIndex].slate === 'dvd') dvdSlate(true); else els.ad.classList.add('on');
     hushAd(true);
-    if (musicOn) Lofi.start();
+    if (musicOn && !gm.open) Lofi.start();
+    if (gm.open) { try { player.pauseVideo(); } catch (e) { /* the ad may not pause */ } }
     // something is playing, so Safari isn't waiting for a tap: every tap goes to the app (and the banner)
     if (document.body.classList.contains('tapyt')) { document.body.classList.remove('tapyt'); document.body.classList.remove('tapgo'); unlocked = true; }
     adFailsafe = setTimeout(() => { dbg('cover up 90 s: taking it down'); adBreak(false, true); }, 90000);   // never leave the slate stuck up
@@ -830,6 +969,7 @@ const Lofi = (() => {
       dbg('music off');
     },
     get playing() { return playing; },
+    get ctx() { if (!ctx) this.unlock(); return ctx; },   // the games' chimes use the same sound chip
   };
 })();
 window.smmMusic = Lofi;   // for trying the tune out from the console
@@ -965,6 +1105,7 @@ function updateProgress() {
 }
 let bannerTimer = 0;
 function showBanner() {
+  if (gm.open) return;                         // the games have the screen
   els.banner.classList.remove('hide'); els.hint.classList.remove('hide'); document.body.classList.add('ui');
   clearTimeout(bannerTimer);
   bannerTimer = setTimeout(() => { if (!guideOpen) { els.banner.classList.add('hide'); els.hint.classList.add('hide'); document.body.classList.remove('ui'); } }, 6000);
@@ -989,6 +1130,12 @@ function buildGuide() {
     b.addEventListener('click', () => { closeGuide(); start(); tune(i); });
     els.list.appendChild(b);
   });
+  const gr = document.createElement('button');
+  gr.className = 'row games-row p-white'; gr.type = 'button'; gr.dataset.kind = 'games';
+  gr.innerHTML = '<span class="n"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="' + STAR_D + '" fill="#fff" stroke="#1D1230" stroke-width="8" stroke-linejoin="round"/></svg></span><span class="t"><b>G</b><b>a</b><b>m</b><b>e</b><b>s</b></span>';
+  gr.addEventListener('click', () => openGames(false));
+  els.list.appendChild(gr);
+  els.gamesRow = gr;
   const g = document.createElement('button');
   g.className = 'row grown p-white'; g.type = 'button'; g.dataset.kind = 'gate';
   g.innerHTML = '<span class="n">' + LOCK_ICON + '</span><span class="t"></span>';
@@ -1011,6 +1158,7 @@ function renderGuide() {
   if (!els.list.children.length) buildGuide();
   els.gateRow.querySelector('.t').textContent = grownUps ? 'Hide the grown-up settings' : 'Grown-ups';
   [...els.list.querySelectorAll('.setting')].forEach((b) => { b.hidden = !grownUps; });
+  els.gamesRow.hidden = !gamesOn;
   const rows = guideRows();
   guideCursor = Math.min(Math.max(0, guideCursor), rows.length - 1);
   rows.forEach((b, i) => {
@@ -1029,6 +1177,7 @@ function chooseRow(b) {
   if (!b) return;
   if (b.dataset.kind === 'ch') { closeGuide(); tune(+b.dataset.i); }
   else if (b.dataset.kind === 'gate') { if (grownUps) lockSettings(); else openGate(); }
+  else if (b.dataset.kind === 'games') openGames(true);
   else if (b.dataset.kind === 'set') SETTINGS[+b.dataset.i].toggle();
 }
 function lockSettings() { grownUps = false; guideCursor = guideRows().indexOf(els.gateRow); renderGuide(); }
@@ -1100,13 +1249,13 @@ els.boot.addEventListener('click', start);   // a tap anywhere on the boot scree
 // The app needs no "press OK": it tunes in once the logo has played.
 if (IN_APP) setTimeout(start, 2800);
 // The remote's Back button (Samsung app): close the question, then the guide; otherwise the app goes back home.
-window.bsoBack = () => { if (gateOpen) { closeGate(); return true; } if (guideOpen) { closeGuide(); return true; } return false; };
-window.bsoResume = () => { if (started && player && player.playVideo) { player.playVideo(); showBanner(); } };
+window.bsoBack = () => { if (gm.open) { gmBack(); return true; } if (gateOpen) { closeGate(); return true; } if (guideOpen) { closeGuide(); return true; } return false; };
+window.bsoResume = () => { if (started && !gm.open && player && player.playVideo) { player.playVideo(); showBanner(); } };
 // what the TV-engine test reads
 window.bsoProbe = () => {
   let st = null, t = null, title = null;
   try { st = player && player.getPlayerState ? player.getPlayerState() : null; t = player && player.getCurrentTime ? Math.round(player.getCurrentTime()) : null; title = player && player.getVideoData ? player.getVideoData().title : null; } catch (e) { st = 'err ' + e.message; }
-  return { page: 'smm', started: started, channel: chIndex + 1, name: CHANNELS[chIndex] && CHANNELS[chIndex].name, state: st, time: t, title: title, adbreak: adOn, guide: guideOpen, gate: gateOpen, grownUps: grownUps, notice: els.notice.hidden ? null : els.nTitle.textContent };
+  return { page: 'smm', started: started, channel: chIndex + 1, name: CHANNELS[chIndex] && CHANNELS[chIndex].name, state: st, time: t, title: title, adbreak: adOn, guide: guideOpen, gate: gateOpen, grownUps: grownUps, games: gm.open ? gm.screen + (gm.game ? ':' + gm.game.key : '') : null, notice: els.notice.hidden ? null : els.nTitle.textContent };
 };
 
 /* ---------- remote / keyboard ---------- */
@@ -1136,6 +1285,8 @@ const SETTINGS = [
     toggle: () => { coverAds = !coverAds; store.set('cover', coverAds); if (!coverAds) adBreak(false, true); setSettingLabels(); showBanner(); } },
   { key: 'music', tag: '♪', label: 'Music during commercials', get: () => musicOn, on: 'On', off: 'Off',
     toggle: () => { musicOn = !musicOn; store.set('music', musicOn); if (!musicOn) Lofi.stop(); else if (adOn) Lofi.start(); setSettingLabels(); } },
+  { key: 'games', tag: '\u2605', label: 'Learning games (the Games button)', get: () => gamesOn, on: 'On', off: 'Off',
+    toggle: () => { gamesOn = !gamesOn; store.set('games', gamesOn); gmShowButton(); setSettingLabels(); renderGuide(); } },
   { key: 'debug', tag: '?', label: 'Show what YouTube says', get: () => DEBUG, on: 'On', off: 'Off',
     toggle: () => { DEBUG = !DEBUG; store.set('debug', DEBUG); const el = document.getElementById('dbg'); if (el) el.hidden = !DEBUG; if (DEBUG) dbg('showing what YouTube says'); setSettingLabels(); } },
 ];
@@ -1180,6 +1331,7 @@ window.addEventListener('keydown', (e) => {
     if (k === 'Enter' || k === ' ' || k === 'MediaPlayPause' || k === 'MediaPlay' || code === 23 || code === 179) { e.preventDefault(); start(); }
     return;
   }
+  if (gm.open) { if (gamesKey(k, code)) e.preventDefault(); return; }
   if (gateOpen) {
     const n = els.gateA.children.length;
     if (k === 'ArrowLeft' || k === 'ArrowUp') gateCursor = (gateCursor + n - 1) % n;
@@ -1202,7 +1354,8 @@ window.addEventListener('keydown', (e) => {
   else if (k === 'ArrowDown' || k === 'PageDown' || k === 'ChannelDown' || code === 167) tune(chIndex - 1);
   else if (k === 'Enter' || k === ' ' || k === 'ChannelList' || k === 'Guide' || k === 'ColorF3Blue' || code === 23) openGuide();
   else if (k === 'ArrowLeft' || k === 'PreviousChannel') tune(prevIndex);
-  else if (k === 'ArrowRight' || k === 'r' || k === 'ColorF2Yellow' || k === 'MediaTrackPrevious') restart();
+  else if (k === 'ArrowRight' || k === 'r' || k === 'MediaTrackPrevious') restart();
+  else if (k === 'ColorF2Yellow' || k === 'y') { if (gamesOn) openGames(true); else restart(); }
   else if (k === 'i' || k === 'Info') { if (prog && prog.seeked) showInfo(); else showBanner(); }
   else if (k === 'MediaPlayPause' || code === 179 || k === 'p') togglePause();
   else if (k === 'MediaPlay' || k === 'MediaPause') { if ((player && player.getPlayerState && player.getPlayerState() === YT.PlayerState.PLAYING) === (k === 'MediaPause')) togglePause(); }
@@ -1240,6 +1393,7 @@ $('btn-restart').addEventListener('click', restart);
 $('btn-guide').addEventListener('click', () => (guideOpen ? closeGuide() : openGuide()));
 els.sound.addEventListener('click', toggleSound);
 $('btn-mallow').addEventListener('click', dropMallows);
+$('btn-games').addEventListener('click', () => openGames(false));
 
 /* ---------- marshmallows ---------- */
 // A handful of soft marshmallows tumble down, bounce and squish on the banner (or the bottom of the screen),
@@ -1398,6 +1552,451 @@ function stepMallows(t) {
   mallowRaf = mallows.length ? requestAnimationFrame(stepMallows) : 0;
 }
 window.smmTilt = tilt;   // for testing tilt without a phone
+
+/* ---------- learning games ---------- */
+// Five big, simple games for 2 to 4 year olds: shapes, colors, numbers, letters and little words.
+// A voice reads every question out loud (they can't read yet). A wrong tap wiggles and says what it was, then
+// greys out so the right one is easier to find; a right tap gets a chime, sparkles and a star, and five stars
+// bring a marshmallow shower. No timers and nothing to lose. Each game gets harder (more to choose from)
+// after a few right answers in a row, and easier again if it's a struggle. The show pauses while they play.
+const gmEls = { root: $('games'), menu: $('gm-menu'), picks: $('gm-picks'), play: $('gm-play'), prompt: $('gm-prompt'), target: $('gm-target'),
+  choices: $('gm-choices'), stars: $('gm-stars'), tv: $('gm-tv'), home: $('gm-home'), say: $('gm-say'), btn: $('btn-games') };
+
+// The voice: the device's own text-to-speech. A new line cuts off the last one (and its follow-up), and if the
+// device never says it finished, a timer carries on, so a game can't get stuck waiting on it.
+const Voice = (() => {
+  const S = window.speechSynthesis, U = window.SpeechSynthesisUtterance;
+  let voice = null, timer = 0, cur = null;
+  const LIKE = ['Samantha', 'Aria', 'Jenny', 'Ava', 'Allison', 'Google US English', 'Susan', 'Zira', 'Karen', 'Moira', 'Tessa'];
+  function pick() {
+    try {
+      const all = (S && S.getVoices && S.getVoices()) || [];
+      const en = all.filter((v) => /^en([-_]|$)/i.test(v.lang || ''));
+      for (let i = 0; i < LIKE.length; i++) { const v = en.filter((x) => (x.name || '').indexOf(LIKE[i]) >= 0)[0]; if (v) { voice = v; return; } }
+      voice = en.filter((v) => /^en[-_]US/i.test(v.lang))[0] || en[0] || null;
+    } catch (e) { voice = null; }
+  }
+  if (S && S.addEventListener) S.addEventListener('voiceschanged', pick);
+  pick();
+  return {
+    say(text, done) {
+      clearTimeout(timer);
+      let once = done;
+      const fin = () => { clearTimeout(timer); const d = once; once = null; if (d) d(); };
+      if (!text) { timer = setTimeout(fin, 0); return; }
+      if (!S || !U) { cur = null; timer = setTimeout(fin, 600 + text.length * 55); return; }   // no voice here: just keep the pace
+      try {
+        if (S.speaking || S.pending) S.cancel();
+        if (!voice) pick();
+        const u = new U(text);
+        cur = u;
+        if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = 'en-US';
+        u.rate = 0.9; u.pitch = 1.15; u.volume = 1;
+        u.onend = () => { if (cur === u) fin(); };
+        u.onerror = () => { if (cur === u) fin(); };
+        S.speak(u);
+        timer = setTimeout(() => { if (cur === u) fin(); }, 1800 + text.length * 95);
+      } catch (e) { timer = setTimeout(fin, 600); }
+    },
+    stop() { clearTimeout(timer); cur = null; try { if (S && (S.speaking || S.pending)) S.cancel(); } catch (e) { /* nothing to stop */ } },
+  };
+})();
+
+// Chimes, made on the spot like the commercial-break music.
+const Sfx = (() => {
+  const f = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  function play(notes) {
+    try {
+      const c = Lofi.ctx;
+      if (!c) return;
+      if (c.state === 'suspended' && c.resume) c.resume();
+      const t0 = c.currentTime + 0.03;
+      notes.forEach((n) => {   // [frequency, start, length, wave, volume, slide to]
+        const o = c.createOscillator(), g = c.createGain(), t = t0 + n[1];
+        o.type = n[3]; o.frequency.setValueAtTime(n[0], t);
+        if (n[5]) o.frequency.exponentialRampToValueAtTime(n[5], t + n[2] * 0.8);
+        g.gain.value = 0; g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(n[4], t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + n[2]);
+        o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + n[2] + 0.05);
+      });
+    } catch (e) { /* no sound chip: the games still work */ }
+  }
+  return {
+    tap() { play([[f(79), 0, 0.09, 'triangle', 0.08, f(86)]]); },
+    good() { play([72, 76, 79, 84].map((m, i) => [f(m), i * 0.08, 0.34, 'triangle', 0.14]).concat([[f(96), 0.32, 0.45, 'sine', 0.05]])); },
+    oops() { play([[f(67), 0, 0.17, 'sine', 0.12, f(64)], [f(62), 0.18, 0.28, 'sine', 0.12, f(58)]]); },
+    yay() { play([60, 64, 67, 72, 67, 72, 76, 79].map((m, i) => [f(m), i * 0.1, i === 7 ? 0.9 : 0.22, 'triangle', 0.13]).concat([[f(84), 0.7, 0.9, 'sine', 0.05]])); },
+  };
+})();
+
+// What the games draw with
+const INK = '#1D1230';
+const GM_PAINT = ['#D52B1E', '#F7C31A', '#2753A6', '#78B157', '#F28A00', '#8A4FC7', '#E85D9A', '#1BA5A8'];
+const GLYPH_PAINT = ['#D52B1E', '#2753A6', '#3DAA4A', '#F28A00', '#8A4FC7', '#E85D9A', '#1BA5A8'];   // no yellow: letters need to stand out on white
+const STAR_D = 'M50 8L61.2 38.6L93.7 39.8L68.1 59.9L77 91.2L50 73L23 91.2L31.9 59.9L6.3 39.8L38.8 38.6Z';
+const SHAPE_D = {
+  circle: '<circle cx="50" cy="50" r="41"/>',
+  square: '<rect x="11" y="11" width="78" height="78" rx="8"/>',
+  triangle: '<path d="M50 9L93 87H7Z"/>',
+  star: '<path d="' + STAR_D + '"/>',
+  heart: '<path d="M50 89C20 67 6 51 6 33C6 18 17 9 30 9C40 9 46 15 50 23C54 15 60 9 70 9C83 9 94 18 94 33C94 51 80 67 50 89Z"/>',
+  diamond: '<path d="M50 5L89 50L50 95L11 50Z"/>',
+  moon: '<path d="M48.4 12.1A40 40 0 1 0 82.4 68.7A33 33 0 0 1 48.4 12.1Z"/>',
+};
+const SHAPE_NAMES = ['circle', 'square', 'triangle', 'star', 'heart', 'diamond', 'moon'];
+const GM_COLORS = [['red', '#E0302A'], ['yellow', '#FFD21F'], ['blue', '#2A6FDB'], ['green', '#3DAA4A'], ['orange', '#FF8A1F'], ['purple', '#8A4FC7'], ['pink', '#FF7EB6'], ['brown', '#8B5A3C']];
+const NUM_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+// [word, picture, group]: only one from a group per question, so there's never an owl next to a bird
+const WORDS = [
+  ['cat', '🐱'], ['dog', '🐶'], ['pig', '🐷'], ['cow', '🐮'], ['sun', '☀️'], ['bus', '🚌'], ['bee', '🐝'], ['fox', '🦊'],
+  ['owl', '🦉', 'bird'], ['egg', '🥚'], ['bed', '🛏️'], ['car', '🚗'], ['hat', '🎩'], ['ant', '🐜'], ['hen', '🐔', 'bird'], ['box', '📦'],
+  ['fish', '🐟'], ['frog', '🐸'], ['duck', '🦆', 'bird'], ['bear', '🐻'], ['cake', '🎂'], ['star', '⭐'], ['moon', '🌙'], ['tree', '🌳'],
+  ['boat', '⛵'], ['bird', '🐦', 'bird'], ['lion', '🦁'], ['milk', '🥛'], ['sock', '🧦'], ['shoe', '👟'], ['ball', '⚽'], ['book', '📘'],
+];
+const PRAISE = ['Yay!', 'Great job!', 'You did it!', 'Awesome!', 'Way to go!', 'Hooray!', 'Super!', 'Nice one!'];
+const pickN = (arr, n) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a.slice(0, n); };
+const shuffled = (arr) => pickN(arr, arr.length);
+const oneOf = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const cap = (w) => w.charAt(0).toUpperCase() + w.slice(1);
+const shapeG = (s, fill, x, y, k, w) => '<g transform="translate(' + x + ' ' + y + ') scale(' + k + ')" fill="' + fill + '" stroke="' + INK + '" stroke-width="' + w + '" stroke-linejoin="round">' + SHAPE_D[s] + '</g>';
+const shapeSvg = (s, fill) => '<svg viewBox="0 0 100 100" aria-hidden="true">' + shapeG(s, fill, 0, 0, 1, 5) + '</svg>';
+const holeSvg = (s) => '<svg viewBox="0 0 100 100" aria-hidden="true"><g fill="rgba(29,18,48,.35)" stroke="rgba(255,255,255,.9)" stroke-width="3.5" stroke-dasharray="7 6" stroke-linejoin="round">' + SHAPE_D[s] + '</g></svg>';
+const balloonG = (fill) => '<path d="M50 93C43 104 57 112 49 127" fill="none" stroke="' + INK + '" stroke-width="2.6" stroke-linecap="round"/>'
+  + '<path d="M43 96L57 96L50 86Z" fill="' + fill + '" stroke="' + INK + '" stroke-width="3.5" stroke-linejoin="round"/>'
+  + '<ellipse cx="50" cy="48" rx="35" ry="41" fill="' + fill + '" stroke="' + INK + '" stroke-width="4.5"/>'
+  + '<ellipse cx="37" cy="31" rx="7.5" ry="12" fill="#fff" opacity=".5" transform="rotate(-22 37 31)"/>';
+const balloonSvg = (fill) => '<svg viewBox="0 0 100 130" aria-hidden="true">' + balloonG(fill) + '</svg>';
+const SPLAT = '<circle cx="60" cy="60" r="36"/><circle cx="40" cy="62" r="20"/><circle cx="80" cy="64" r="22"/><circle cx="27" cy="34" r="12"/><circle cx="96" cy="38" r="10"/>'
+  + '<circle cx="99" cy="82" r="13"/><circle cx="24" cy="90" r="10"/><circle cx="58" cy="104" r="8"/><circle cx="60" cy="13" r="7"/>';
+const splatSvg = (fill) => '<svg viewBox="0 0 120 120" aria-hidden="true"><g fill="' + INK + '" stroke="' + INK + '" stroke-width="9">' + SPLAT + '</g><g fill="' + fill + '">' + SPLAT + '</g>'
+  + '<ellipse cx="47" cy="45" rx="10" ry="6" fill="#fff" opacity=".45" transform="rotate(-30 47 45)"/></svg>';
+const glyphCard = (t, color) => '<span class="glyph" style="color:' + color + '">' + t + '</span>';
+
+// Each game makes one question at a time: what to say, what goes up top, the choices and which one is right.
+// lv 0 gives 2 choices, lv 1 three, lv 2 four (with a few harder things mixed in).
+function shapesRound(lv) {
+  const n = lv + 2, names = pickN(lv ? SHAPE_NAMES : SHAPE_NAMES.slice(0, 5), n), ans = names[0], paints = pickN(GM_PAINT, n);
+  return { answer: ans, text: 'Find the ' + ans + '!', say: 'Find the ' + ans + '!', praise: 'That\'s the ' + ans + '!', fly: true,
+    target: '<div class="gm-slot">' + holeSvg(ans) + '</div>', filled: '<div class="gm-slot">' + shapeSvg(ans, paints[0]) + '</div>',
+    choices: shuffled(names.map((s, i) => ({ key: s, html: shapeSvg(s, paints[i]), said: 'the ' + s }))) };
+}
+function colorsRound(lv) {
+  const set = pickN(GM_COLORS.slice(0, [4, 6, 8][lv]), lv + 2), ans = set[0][0];
+  return { answer: ans, text: 'Find the ' + ans + ' balloon!', say: 'Find the ' + ans + ' balloon!', praise: 'That\'s ' + ans + '!', float: true,
+    target: '<div class="gm-slot">' + splatSvg(set[0][1]) + '</div>',
+    choices: shuffled(set.map((c) => ({ key: c[0], html: balloonSvg(c[1]), said: c[0] }))) };
+}
+function numbersRound(lv) {
+  const n = lv + 2, count = lv > 0 && Math.random() < 0.5, top = count ? (lv > 1 ? 6 : 5) : (lv > 1 ? 10 : 5);
+  const all = []; for (let i = 1; i <= top; i++) all.push(i);
+  const set = pickN(all, n), ans = set[0], paints = pickN(GLYPH_PAINT, n);
+  const choices = shuffled(set.map((v, i) => ({ key: v, html: glyphCard(v, paints[i]), said: 'number ' + NUM_WORDS[v] })));
+  if (!count) {
+    return { answer: ans, text: 'Find the number ' + ans + '!', say: 'Find the number ' + NUM_WORDS[ans] + '!', praise: 'That\'s ' + NUM_WORDS[ans] + '!', fly: true,
+      target: '<div class="gm-glyph">' + ans + '</div>', filled: '<div class="gm-glyph full" style="color:' + paints[0] + '">' + ans + '</div>', choices: choices };
+  }
+  // counting: a card of stars (or hearts, or dots) and the numbers to pick from
+  const thing = oneOf([['star', 'stars'], ['heart', 'hearts'], ['circle', 'circles']]), paint = oneOf(GM_PAINT);
+  let items = ''; for (let i = 0; i < ans; i++) items += shapeSvg(thing[0], paint);
+  const r = { answer: ans, text: 'How many ' + thing[1] + '?', say: 'How many ' + thing[1] + '? Count them!', praise: cap(NUM_WORDS[ans]) + ' ' + (ans === 1 ? thing[0] : thing[1]) + '!',
+    target: '<div class="gm-count">' + items + '</div>', choices: choices };
+  r.onWrong = (done) => countAlong(r, ans, () => Voice.say(cap(NUM_WORDS[ans]) + '! Find the number ' + NUM_WORDS[ans] + '.', done));   // the first miss: count them together
+  r.onRight = () => { const it = gmEls.target.querySelectorAll('.gm-count svg'); for (let i = 0; i < it.length; i++) hop(it[i], i * 90); };
+  return r;
+}
+function lettersRound(lv) {
+  const n = lv + 2, set = pickN(LETTERS, n), ans = set[0], paints = pickN(GLYPH_PAINT, n);
+  return { answer: ans, text: 'Find the letter ' + ans + '!', say: 'Find the letter ' + ans + '!', praise: 'That\'s the letter ' + ans + '!', fly: true,
+    target: '<div class="gm-glyph">' + ans + '</div>', filled: '<div class="gm-glyph full" style="color:' + paints[0] + '">' + ans + '</div>',
+    choices: shuffled(set.map((L, i) => ({ key: L, html: glyphCard(L, paints[i]), said: 'the letter ' + L }))) };
+}
+// Words: the letters pop up one at a time as the voice spells them, then it says the word; tap its picture.
+function wordsRound(lv) {
+  const pool = lv > 1 ? WORDS : WORDS.filter((w) => w[0].length === 3), n = lv + 2, set = [], groups = {};
+  shuffled(pool).forEach((w) => { if (set.length < n && !(w[2] && groups[w[2]])) { set.push(w); if (w[2]) groups[w[2]] = 1; } });
+  const ans = set[0], word = ans[0], letters = word.toUpperCase().split('');
+  const r = { answer: word, text: 'Find the ' + word + '!', say: 'Find the ' + word + '!', praise: letters.join(', ') + ' spells ' + word + '!',
+    target: '<div class="gm-tiles">' + letters.map(() => '<span class="gm-tile"></span>').join('') + '</div>',
+    choices: shuffled(set.map((w) => ({ key: w[0], html: '<span class="emo">' + w[1] + '</span><span class="word">' + w[0].toUpperCase() + '</span>', said: 'the ' + w[0] }))) };
+  const tiles = () => gmEls.target.querySelectorAll('.gm-tile');
+  r.finishIntro = () => { const t = tiles(); for (let i = 0; i < t.length; i++) { t[i].textContent = letters[i]; t[i].classList.add('on'); t[i].classList.remove('hi'); } };
+  r.intro = (done) => {
+    let i = 0;
+    const step = () => {
+      if (gm.round !== r || !gm.open) return;
+      const t = tiles();
+      for (let j = 0; j < t.length; j++) t[j].classList.remove('hi');
+      if (i >= letters.length) { Voice.say(word + '!', done); return; }
+      const el = t[i];
+      if (el) { el.textContent = letters[i]; el.classList.add('on'); el.classList.add('hi'); }
+      Voice.say(letters[i], () => setTimeout(step, 150));
+      i++;
+    };
+    step();
+  };
+  r.onRight = () => { r.finishIntro(); const row = gmEls.target.querySelector('.gm-tiles'); if (row) row.insertAdjacentHTML('beforeend', '<span class="emo">' + ans[1] + '</span>'); };
+  return r;
+}
+function hop(el, delay) {
+  setTimeout(() => { el.classList.remove('hop'); void el.getBoundingClientRect(); el.classList.add('hop'); }, delay || 0);
+}
+function countAlong(r, n, done) {
+  const items = gmEls.target.querySelectorAll('.gm-count svg');
+  let k = 0;
+  const step = () => {
+    if (gm.round !== r || !gm.open) return;
+    if (k >= n) { done(); return; }
+    if (items[k]) hop(items[k]);
+    k++;
+    Voice.say(NUM_WORDS[k], step);
+  };
+  Voice.say('Let\'s count together!', step);
+}
+const artTxt = (t) => '<span class="art-txt">' + t.split('').map((c, i) => '<b style="color:' + GLYPH_PAINT[i % GLYPH_PAINT.length] + '">' + c + '</b>').join('') + '</span>';
+const GAMES = [
+  { key: 'shapes', name: 'Shapes', paint: 'red', make: shapesRound,
+    art: '<svg viewBox="0 0 150 100" aria-hidden="true">' + shapeG('circle', '#F7C31A', 2, 40, 0.56, 8) + shapeG('triangle', '#2753A6', 46, 2, 0.6, 8) + shapeG('star', '#78B157', 92, 38, 0.58, 8) + '</svg>' },
+  { key: 'colors', name: 'Colors', paint: 'yellow', make: colorsRound,
+    art: '<svg viewBox="0 0 150 110" aria-hidden="true"><g transform="translate(0 14) scale(.72)">' + balloonG('#E0302A') + '</g><g transform="translate(76 14) scale(.72)">' + balloonG('#3DAA4A') + '</g><g transform="translate(37 0) scale(.78)">' + balloonG('#2A6FDB') + '</g></svg>' },
+  { key: 'numbers', name: 'Numbers', paint: 'blue', make: numbersRound, art: artTxt('123') },
+  { key: 'letters', name: 'Letters', paint: 'green', make: lettersRound, art: artTxt('ABC') },
+  { key: 'words', name: 'Words', paint: 'white', make: wordsRound, art: '<span class="emo">🐱</span>' },
+];
+function gmLevel(key) { const s = gm.lv[key]; return s && s.l >= 0 && s.l <= 2 ? s.l : 0; }
+function gmScore(key, misses) {
+  const s = gm.lv[key] && gm.lv[key].l != null ? gm.lv[key] : (gm.lv[key] = { l: 0, s: 0 });
+  if (misses === 0) { s.s++; if (s.s >= 3 && s.l < 2) { s.l++; s.s = 0; } }   // three right in a row: one more to choose from
+  else { s.s = 0; if (misses >= 2 && s.l > 0) s.l--; }                        // a hard one: one fewer
+  store.set('gmlv', gm.lv);
+}
+
+function gmBuild() {
+  GAMES.forEach((g, i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'gm-pick p-' + g.paint; b.setAttribute('aria-label', g.name);
+    b.innerHTML = '<span class="art">' + g.art + '</span><span class="nm">' + g.name + '</span>';
+    b.style.animationDelay = (i * 70) + 'ms';
+    b.addEventListener('click', (e) => { e.stopPropagation(); gmStart(g); });
+    gmEls.picks.appendChild(b);
+  });
+  gmStarsRender();
+}
+function gmStarsRender() {
+  let h = '';
+  for (let i = 0; i < 5; i++) h += '<svg viewBox="0 0 100 100"' + (i < gm.stars ? ' class="on"' : '') + '><path d="' + STAR_D + '"/></svg>';
+  gmEls.stars.innerHTML = h;
+}
+function gmStar() {
+  gm.stars = Math.min(5, gm.stars + 1);
+  const el = gmEls.stars.children[gm.stars - 1];
+  if (el) el.setAttribute('class', 'on');
+}
+function openGames(byKey) {
+  if (!gamesOn || gm.open || !started) return;
+  if (guideOpen) closeGuide();
+  if (!gmEls.picks.children.length) gmBuild();
+  gm.open = true; gm.keys = !!byKey;
+  document.body.classList.add('gaming');
+  clearTimeout(bannerTimer); els.banner.classList.add('hide'); els.hint.classList.add('hide'); document.body.classList.remove('ui');
+  gm.wasPlaying = !els.pause.classList.contains('paused');                 // pick the show back up after, unless it was paused already
+  try { if (player && player.pauseVideo) player.pauseVideo(); } catch (e) { /* the player isn't ready */ }
+  Lofi.stop();
+  gmEls.root.hidden = false;
+  gmMenu();
+  dbg('games open');
+}
+function closeGames() {
+  if (!gm.open) return;
+  gm.open = false; gm.round = null; gm.game = null;
+  clearTimeout(gm.idleT); Voice.stop();
+  gmEls.root.hidden = true; document.body.classList.remove('gaming');
+  if (gm.wasPlaying && player && player.playVideo) {
+    try { player.playVideo(); } catch (e) { /* the player isn't ready */ }
+    if (IOS) checkStarted(3500);   // if Safari won't start it again, it asks for a tap on the video
+  }
+  if (adOn && musicOn) Lofi.start();
+  showBanner();
+  dbg('games closed');
+}
+function gmBack() { if (gm.screen === 'play') { Sfx.tap(); gmMenu(); } else closeGames(); }
+function gmShowButton() {
+  gmEls.btn.hidden = !gamesOn;
+  els.hint.classList.toggle('nogames', !gamesOn);
+  if (!gamesOn) closeGames();
+}
+function gmMenu() {
+  gm.screen = 'menu'; gm.game = null; gm.round = null; clearTimeout(gm.idleT);
+  gmEls.menu.hidden = false; gmEls.play.hidden = true; gmEls.home.hidden = true;
+  [].forEach.call(gmEls.picks.children, (b) => { b.style.animation = 'none'; void b.offsetWidth; b.style.animation = ''; });   // the tiles bounce in again
+  gm.row = 1; gm.col = 0; gmCursor();
+  Voice.say('Let\'s play! Pick a game.');
+}
+function gmStart(g) {
+  Sfx.tap();
+  gm.game = g; gm.screen = 'play'; gm.last = null; gm.round = null;
+  gmEls.menu.hidden = true; gmEls.play.hidden = false; gmEls.home.hidden = false;
+  gmEls.prompt.textContent = ''; gmEls.target.innerHTML = ''; gmEls.choices.innerHTML = '';
+  gm.row = 1; gm.col = 0; gmCursor();
+  Voice.say(g.name + '!', () => { if (gm.game === g && !gm.round) gmRound(); });
+}
+function gmRound() {
+  const g = gm.game;
+  if (!g || !gm.open || gm.screen !== 'play') return;
+  const lv = gmLevel(g.key);
+  let r = g.make(lv), guard = 0;
+  while (String(r.answer) === String(gm.last) && guard++ < 8) r = g.make(lv);   // never the same answer twice in a row
+  gm.last = r.answer; r.misses = 0; r.done = false; gm.round = r;
+  gmEls.prompt.textContent = r.text;
+  gmEls.target.innerHTML = r.target;
+  gmEls.choices.innerHTML = '';
+  r.choices.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'gm-card'; b.innerHTML = c.html; b.setAttribute('aria-label', c.said);
+    b.style.animationDelay = (120 + i * 80) + 'ms';
+    b.addEventListener('click', (e) => { e.stopPropagation(); gmPick(i); });
+    gmEls.choices.appendChild(b);
+  });
+  gm.row = 1; gm.col = 0; gm.idleN = 0; gmCursor();
+  if (r.intro) r.intro(gmAsk); else gmAsk();
+}
+function gmAsk() {
+  const r = gm.round;
+  if (!r || r.done || !gm.open) return;
+  Voice.say(r.say);
+  gmIdle();
+}
+// Nobody's tapped for a while: say it again, and after a couple of times give the right one a little wiggle.
+// After a few minutes of nothing it goes quiet.
+function gmIdle() {
+  clearTimeout(gm.idleT);
+  gm.idleT = setTimeout(() => {
+    const r = gm.round;
+    if (!gm.open || !r || r.done || gm.idleN >= 5) return;
+    gm.idleN++;
+    if (gm.idleN >= 2) {
+      const b = gmEls.choices.children[r.choices.map((c) => c.key).indexOf(r.answer)];
+      if (b) { b.classList.remove('hint'); void b.offsetWidth; b.classList.add('hint'); }
+    }
+    Voice.say(r.say);
+    gmIdle();
+  }, 14000);
+}
+function gmReplay() {
+  Sfx.tap();
+  if (gm.screen === 'menu') { Voice.say('Let\'s play! Pick a game: shapes, colors, numbers, letters, or words.'); return; }
+  const r = gm.round;
+  if (!r || r.done) return;
+  gm.idleN = 0;
+  if (r.intro) r.intro(gmAsk); else gmAsk();
+}
+function gmPick(i) {
+  const r = gm.round, b = gmEls.choices.children[i];
+  if (!r || r.done || !b || b.disabled) return;
+  const c = r.choices[i];
+  gm.idleN = 0;
+  if (r.finishIntro) r.finishIntro();
+  if (c.key === r.answer) {
+    r.done = true; clearTimeout(gm.idleT);
+    gmScore(gm.game.key, r.misses);
+    Sfx.good(); gmBurst(b);
+    if (r.fly) gmFly(b, r); else if (r.float) b.classList.add('float'); else b.classList.add('right');
+    if (r.onRight) r.onRight(b);
+    gmStar();
+    const t0 = Date.now();
+    Voice.say(oneOf(PRAISE) + ' ' + r.praise, () => setTimeout(() => { if (gm.round === r) gmAfter(); }, Math.max(250, 1700 - (Date.now() - t0))));
+  } else {
+    r.misses++;
+    Sfx.oops();
+    b.disabled = true;
+    b.classList.remove('wrong'); void b.offsetWidth; b.classList.add('wrong');
+    setTimeout(() => b.classList.add('dim'), 420);
+    if (r.onWrong && r.misses === 1) Voice.say('That\'s ' + c.said + '.', () => r.onWrong(gmIdle));
+    else { Voice.say('That\'s ' + c.said + '. ' + r.say); gmIdle(); }
+    gmCursor();
+  }
+}
+// Five stars: a marshmallow shower and a "Superstar!", then a fresh row of stars.
+function gmAfter() {
+  if (gm.stars < 5) { gmRound(); return; }
+  const r = gm.round;
+  Sfx.yay(); dropMallows(); setTimeout(dropMallows, 700);
+  const s = document.createElement('div');
+  s.className = 'gm-super'; s.textContent = 'Superstar!';
+  gmEls.root.appendChild(s);
+  setTimeout(() => { if (s.parentNode) s.parentNode.removeChild(s); }, 2700);
+  Voice.say('Five stars! You\'re a superstar!', () => setTimeout(() => {
+    gm.stars = 0; gmStarsRender();
+    if (gm.open && gm.round === r) gmRound();
+  }, 900));
+}
+// A right shape, letter or number flies up into its spot.
+function gmFly(b, r) {
+  const slot = gmEls.target.firstElementChild;
+  if (!slot) return;
+  const a = b.getBoundingClientRect(), z = slot.getBoundingClientRect();
+  const k = Math.min(z.width / a.width, z.height / a.height);
+  b.classList.add('flying');
+  b.style.transform = 'translate(' + (z.left + z.width / 2 - a.left - a.width / 2).toFixed(1) + 'px,' + (z.top + z.height / 2 - a.top - a.height / 2).toFixed(1) + 'px) scale(' + k.toFixed(3) + ')';
+  setTimeout(() => { if (gm.round !== r) return; gmEls.target.innerHTML = r.filled; b.style.opacity = '0'; }, 560);
+}
+function gmBurst(b) {
+  const box = b.getBoundingClientRect(), cx = box.left + box.width / 2, cy = box.top + box.height / 2, u = Math.min(window.innerWidth, window.innerHeight) / 100;
+  for (let i = 0; i < 12; i++) {
+    const s = document.createElement('i');
+    s.className = 'gm-spark'; s.style.background = GM_PAINT[i % GM_PAINT.length];
+    s.style.transform = 'translate(' + cx.toFixed(1) + 'px,' + cy.toFixed(1) + 'px) scale(.4)';
+    document.body.appendChild(s);
+    const ang = i / 12 * Math.PI * 2 + Math.random() * 0.4, d = (17 + Math.random() * 14) * u;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      s.style.transform = 'translate(' + (cx + Math.cos(ang) * d).toFixed(1) + 'px,' + (cy + Math.sin(ang) * d).toFixed(1) + 'px) scale(1.2)';
+      s.style.opacity = '0';
+    }));
+    setTimeout(() => { if (s.parentNode) s.parentNode.removeChild(s); }, 900);
+  }
+}
+// The TV remote: ◀ ▶ to move, ▲ to the buttons at the top, ▼ back to the cards, OK to pick, Back to go back.
+function gmRows() {
+  const top = [gmEls.tv, gmEls.home, gmEls.say].filter((b) => !b.hidden);
+  const body = [].slice.call(gm.screen === 'menu' ? gmEls.picks.children : gmEls.choices.children).filter((b) => !b.disabled);
+  return [top, body];
+}
+function gmCursor() {
+  [].forEach.call(gmEls.root.querySelectorAll('.cursor'), (b) => b.classList.remove('cursor'));
+  if (!gm.keys) return;                         // fingers don't need a cursor
+  const rows = gmRows();
+  if (!rows[gm.row].length) gm.row = rows[1].length ? 1 : 0;
+  const row = rows[gm.row];
+  gm.col = Math.min(Math.max(0, gm.col), row.length - 1);
+  if (row[gm.col]) row[gm.col].classList.add('cursor');
+}
+function gamesKey(k, code) {
+  const rows = gmRows();
+  if (k === 'ArrowLeft') gm.col--;
+  else if (k === 'ArrowRight') gm.col++;
+  else if (k === 'ArrowUp') { if (gm.row === 1 && rows[0].length) { gm.row = 0; gm.col = 0; } }
+  else if (k === 'ArrowDown') { if (gm.row === 0 && rows[1].length) { gm.row = 1; gm.col = 0; } }
+  else if (k === 'Enter' || k === ' ' || code === 23) {
+    if (!gm.keys) { gm.keys = true; gmCursor(); return true; }   // the first press just shows where you are
+    const row = rows[gm.row], b = row[Math.min(Math.max(0, gm.col), row.length - 1)];
+    if (b) b.click();
+    gmCursor();
+    return true;
+  }
+  else if (k === 'Escape' || k === 'Backspace' || k === 'GoBack' || code === 4 || code === 10009) gmBack();
+  else if (k === 'ColorF2Yellow' || k === 'y') closeGames();
+  else if (k === 'ColorF1Green' || k === 'g') dropMallows();
+  else return false;
+  gm.keys = true;
+  gmCursor();
+  return true;
+}
+gmEls.tv.addEventListener('click', (e) => { e.stopPropagation(); Sfx.tap(); closeGames(); });
+gmEls.home.addEventListener('click', (e) => { e.stopPropagation(); gmBack(); });
+gmEls.say.addEventListener('click', (e) => { e.stopPropagation(); gmReplay(); });
+gmEls.root.addEventListener('pointerdown', () => { if (gm.keys) { gm.keys = false; gmCursor(); } });
+gmEls.root.addEventListener('contextmenu', (e) => e.preventDefault());
+gmShowButton();
+window.smmGames = { open: openGames, close: closeGames, state: gm };   // for testing
 
 renderGuide();
 const s = document.createElement('script');

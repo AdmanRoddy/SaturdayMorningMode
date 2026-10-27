@@ -29,7 +29,9 @@ like an old DVD player (only the movie channel has it).
 
 Shows come from their official channel, or a playlist on a channel run by the studio or its licensed
 distributor. Bear in the Big Blue House, classic Blue's Clues and Wishbone have nothing official on YouTube,
-so those three are fan-made playlists and can lose videos over time. The movie channel, Saturday Matinee, plays the
+so those three are fan-made playlists and can lose videos over time. The Ballet channel is hand-picked
+performances posted by the companies and schools themselves (The Royal Ballet, English National Ballet, Pacific
+Northwest Ballet and others' full Nutcrackers), and VeggieTales comes from the official VeggieTales channel. The movie channel, Saturday Matinee, plays the
 Air Bud films from Air Bud Entertainment's own channel; the other 90s movies are only rentals on YouTube, which
 won't play inside another app.
 
@@ -44,6 +46,7 @@ It starts with `UC`.
 | OK | Guide |
 | ◀ | Last channel |
 | ▶ | Start the show over |
+| Yellow | Games (same as the shapes button on the banner) |
 | Play/Pause | Pause |
 | Number keys | Go straight to a channel |
 | Green | Marshmallows! (same as the marshmallow button on the banner) |
@@ -55,9 +58,30 @@ On a phone or tablet: swipe up or down to change channel, tap for the buttons.
 
 At the bottom of the guide, **Grown-ups** asks a times-table question with four big answers. Answer it and the
 settings show: captions, picture fill or fit, jump in mid-show, cover commercials, music during commercials,
-tilt for the marshmallows (phones and iPads; asks for motion access once each time the app opens), and
+the learning games (on or off), tilt for the marshmallows (phones and iPads; asks for motion access once each time the app opens), and
 YouTube's debug readout.
 They hide again as soon as the guide closes.
+
+## Learning games
+
+The shapes button on the banner (Yellow on the remote, or **Games** in the guide) pauses the show and opens five
+games made for 2 to 4 year olds:
+
+| Game | What they do |
+| --- | --- |
+| Shapes | Find the shape that fits the hole; it flies in |
+| Colors | Find the red (or blue, or green…) balloon; it floats away |
+| Numbers | Match 3 to 3, and later count the stars and pick how many |
+| Letters | Find the letter B |
+| Words | The voice spells C-A-T as the letters pop up; tap the cat |
+
+The device reads every question out loud, so they don't need to read. A wrong tap says what it was ("That's the
+heart") and greys out, so they always get there; a right one gets a chime, sparkles and a star, and five stars
+bring a marshmallow shower. Each game starts with two choices and adds one after three right in a row (up to
+four), and drops one again after a tough question. Saying it again: the green speaker button. The red **TV**
+button goes back to the show where it left off.
+
+Grown-ups can turn the games off in the settings; the button, the guide entry and the Yellow key go away.
 
 ## What's different from BSO TV
 

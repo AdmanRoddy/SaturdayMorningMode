@@ -94,10 +94,11 @@ Grown-ups can turn the games off in the settings; the button, the guide entry an
 
 ### The games' voice
 
-Every line the games say is a recorded clip in `voice/` (one MP3 per line, named by a hash of the line, listed in
+The games are silent by default (the cards, pictures, chimes and stars do the talking). If a grown-up turns
+**Games voice** on, every line is a recorded clip in `voice/` (one MP3 per line, named by a hash of the line, listed in
 `voice/lines.js`). They were made with [Kokoro](https://github.com/thewh1teagle/kokoro-onnx), an open-source voice
 (the `af_heart` voice). A line without a clip falls back to the
-device's own voice. In the grown-up settings, **Games voice** switches between the recorded voice and the device's
+device's own voice. In the grown-up settings, **Games voice** steps through Off, the recorded voice and the device's
 voices (best ones first), and **Cartoon voice** pitches a device voice up.
 
 When the games get new lines, the clips need making again: `window.smmGames.lines()` in the browser console lists

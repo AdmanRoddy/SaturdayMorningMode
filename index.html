@@ -328,7 +328,8 @@ body.touch .hint{display:none}
 .gm-card .glyph{font-family:'Luckiest Guy','Arial Black',Impact,sans-serif;font-size:18vmin;line-height:1;padding-top:2.6vmin;text-shadow:.6vmin .6vmin 0 var(--ink)}
 .gm-card .emo{font-size:13vmin;line-height:1.05}
 .gm-card .word{margin-top:.8vmin;font-family:'Luckiest Guy','Arial Black',Impact,sans-serif;font-size:4.4vmin;line-height:1;letter-spacing:.08em}
-.gm-card.hint{animation:gmHint 1s ease 2}
+/* (not .hint: that's the TV remote's key list, hidden on phones and iPads, so a hinted card vanished there) */
+.gm-card.nudge{animation:gmHint 1s ease 2}
 .gm-card.wrong{animation:gmShake .45s ease}
 .gm-card.dim{opacity:.3}
 .gm-card.right{z-index:3;animation:gmYay .7s ease}
@@ -1328,7 +1329,7 @@ const SETTINGS = [
     toggle: () => { DEBUG = !DEBUG; store.set('debug', DEBUG); const el = document.getElementById('dbg'); if (el) el.hidden = !DEBUG; if (DEBUG) dbg('showing what YouTube says'); setSettingLabels(); } },
 ];
 if (window.speechSynthesis) {
-  SETTINGS.push({ key: 'voice', tag: 'Aa', label: 'Games voice (tap to hear the next one)', get: () => false, state: () => Voice.label(), toggle: () => { Voice.next(); setSettingLabels(); } });
+  SETTINGS.push({ key: 'voice', tag: 'Aa', label: 'Games voice (tap to change)', get: () => false, state: () => Voice.label(), toggle: () => { Voice.next(); setSettingLabels(); } });
   SETTINGS.push({ key: 'cartoon', tag: '\u263A', label: 'Cartoon voice (higher and bouncier)', get: () => Voice.cartoon, on: 'On', off: 'Off',
     toggle: () => { Voice.setCartoon(!Voice.cartoon); setSettingLabels(); } });
 }
@@ -1604,8 +1605,9 @@ window.smmTilt = tilt;   // for testing tilt without a phone
 const gmEls = { root: $('games'), menu: $('gm-menu'), picks: $('gm-picks'), play: $('gm-play'), prompt: $('gm-prompt'), target: $('gm-target'),
   choices: $('gm-choices'), stars: $('gm-stars'), tv: $('gm-tv'), home: $('gm-home'), say: $('gm-say'), btn: $('btn-games'), actor: $('gm-actor'), host: $('gm-host') };
 
-// The voice. Every line the games say is recorded as a little sound clip (voice/, made with the open-source
-// Kokoro voice). Clips play through the same sound chip as the chimes. Mr. Isaac himself doesn't talk.
+// The voice. Off unless a grown-up turns it on: the games work by sight and sound effects alone. When it's on,
+// every line is a recorded clip (voice/, made with the open-source Kokoro voice) played through the same sound
+// chip as the chimes, or one of the device's own voices. Mr. Isaac himself doesn't talk.
 // A line without a clip, or a device that can't fetch them, falls back to the device's own text-to-speech.
 // A new line cuts off the last one (and whatever was meant to follow it), and if something never says it's
 // finished, a timer carries on, so a game can't get stuck waiting.
@@ -1621,7 +1623,7 @@ const Voice = (() => {
   const NOVELTY = /^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Pipe Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Deranged|Hysterical|Princess)$/i;
   const base = (v) => (v.name || '').replace(/\s*\(.*\)\s*$/, '').replace(/^Microsoft\s+/, '').replace(/\s+Online.*$/, '');
   const id = (t) => hash(t).toString(36);
-  const recorded = () => chosen === '' || chosen === 'recorded';
+  const recorded = () => chosen === 'recorded', off = () => !chosen || chosen === 'off';
   function score(v) {
     const n = (v.name || '') + ' ' + (v.voiceURI || '');
     let sc = 0;
@@ -1644,7 +1646,7 @@ const Voice = (() => {
   pick();
   // the list of recorded lines (fetched once)
   function ensure() {
-    if (have || loading) return;
+    if (have || loading || !recorded()) return;
     loading = true;
     const sc = document.createElement('script');
     sc.src = 'voice/lines.js?v=' + VOICE_V;
@@ -1693,6 +1695,7 @@ const Voice = (() => {
       let once = done;
       const fin = () => { clearTimeout(timer); if (my !== seq) return; const d = once; once = null; if (d) d(); };
       if (!parts.length) { timer = setTimeout(fin, 0); return; }
+      if (off()) { timer = setTimeout(fin, 300 + parts.join(' ').length * 35); return; }   // voice off: just keep the pace
       const c = Lofi.ctx;
       if (!recorded() || !have || !c || !parts.every((t) => have[id(t)])) { tts(parts.join(' '), fin, my); return; }
       let i = 0;
@@ -1730,16 +1733,18 @@ const Voice = (() => {
     // grown-up settings: the recorded cartoon voice, then the device's own voices (best first)
     next() {
       ensure(); pick();
-      const opts = ['recorded'].concat(all.map((v) => v.name));
-      chosen = opts[(Math.max(0, opts.indexOf(recorded() ? 'recorded' : chosen)) + 1) % opts.length];
+      const opts = ['off', 'recorded'].concat(all.map((v) => v.name));
+      chosen = opts[(Math.max(0, opts.indexOf(off() ? 'off' : chosen)) + 1) % opts.length];
+      ensure();
       store.set('voice', chosen);
       voice = all.filter((v) => v.name === chosen)[0] || all[0] || null;
-      api.say('Let\'s play! Pick a game.');
+      if (!off()) api.say('Let\'s play! Pick a game.');
     },
-    label() { if (recorded()) return 'Recorded'; if (!voice) pick(); return voice ? base(voice) + (/premium/i.test(voice.name) ? ' (Premium)' : /enhanced/i.test(voice.name) ? ' (Enhanced)' : '') : 'Default'; },
+    label() { if (off()) return 'Off'; if (recorded()) return 'Recorded'; if (!voice) pick(); return voice ? base(voice) + (/premium/i.test(voice.name) ? ' (Premium)' : /enhanced/i.test(voice.name) ? ' (Enhanced)' : '') : 'Default'; },
     get recorded() { return recorded(); },
+    get on() { return !off(); },
     get cartoon() { return cartoon; },
-    setCartoon(on) { cartoon = on; store.set('cartoon', on); api.say('Let\'s play! Pick a game.'); },
+    setCartoon(on) { cartoon = on; store.set('cartoon', on); if (!off()) api.say('Let\'s play! Pick a game.'); },
     id: id,
   };
   return api;
@@ -1944,7 +1949,7 @@ function wordsRound(lv) {
       for (let j = 0; j < t.length; j++) t[j].classList.remove('hi');
       if (i >= letters.length) { Voice.say(word + '!', done); return; }
       const el = t[i];
-      if (el) { el.textContent = letters[i]; el.classList.add('on'); el.classList.add('hi'); }
+      if (el) { el.textContent = letters[i]; el.classList.add('on'); el.classList.add('hi'); if (!Voice.on) Sfx.tap(); }
       Voice.say(letters[i], () => setTimeout(step, 150));
       i++;
     };
@@ -1962,7 +1967,7 @@ function countAlong(r, n, done) {
   const step = () => {
     if (gm.round !== r || !gm.open) return;
     if (k >= n) { done(); return; }
-    if (items[k]) hop(items[k]);
+    if (items[k]) { hop(items[k]); if (!Voice.on) Sfx.tap(); }
     k++;
     Voice.say(NUM_WORDS[k], step);
   };
@@ -2452,9 +2457,9 @@ function gmIdle() {
     const r = gm.round;
     if (!gm.open || !r || r.done || gm.idleN >= 5) return;
     gm.idleN++;
-    if (gm.idleN >= 2) {
+    if (gm.idleN >= (Voice.on ? 2 : 1)) {                       // without a voice, the nudge comes sooner
       const b = gmEls.choices.children[r.choices.map((c) => c.key).indexOf(r.answer)];
-      if (b) { b.classList.remove('hint'); void b.offsetWidth; b.classList.add('hint'); }
+      if (b) { b.classList.remove('nudge'); void b.offsetWidth; b.classList.add('nudge'); }
     }
     Voice.say(r.say);
     gmIdle();

@@ -66,6 +66,105 @@ window.SMM_CHANNELS = [
   ] },
   // Disney Kids' own "The New Adventures of Winnie the Pooh" playlist
   { name: 'Winnie the Pooh', list: 'PLWMhB1nOHzvs' },
+  // Real ballet companies and schools, each video tested to play here: full-length Nutcrackers, plus stage
+  // clips from story ballets (no trailers, interviews or rehearsals)
+  { name: 'Ballet', ids: [
+    // Full-length Nutcrackers, posted by the companies and schools themselves
+    'Lv-migIgqq4',   // Central Florida Ballet: The Nutcracker (full length)
+    'FkcfsFp10AI',   // Central Florida Ballet: The Nutcracker (1 hour, narrated for children)
+    'ed-pB5VnKr0',   // Imperial Classical Ballet: The Nutcracker (full performance)
+    'tR_Z1LUDQuQ',   // Imperial Classical Ballet: The Nutcracker (full performance, HD)
+    '6tsVHpaiLrA',   // Swedish National Ballet School: The Nutcracker
+    'VZLnm5vWqpM',   // Joffrey Ballet School: Nutcracker 2019
+    'prTm33RDsLg',   // Armour Dance Theatre: The Nutcracker 2018
+    // The Royal Ballet's stage clips (Royal Ballet and Opera)
+    'zV1qLYukTH8',   // Nutcracker: Dance of the Sugar Plum Fairy
+    'KiOSA7PDvG0',   // Nutcracker: Sugar Plum pas de deux
+    'qy6dlGpC3Ns',   // Nutcracker: Sugar Plum adagio
+    'Iz9fqHJdrZc',   // Nutcracker: Sugar Plum Prince variation
+    'AfpiTEzL_FA',   // Nutcracker: Waltz of the Snowflakes
+    'UYaIQNjAX_8',   // Nutcracker: Waltz of the Snowflakes (longer)
+    'eqNJkorD2Yw',   // Nutcracker: Rose Fairy
+    'V32zWkB1MiY',   // Nutcracker: Dance of the Mirlitons
+    'cEjEtPgaL60',   // Nutcracker: Act I pas de deux
+    'F-CwMdtpq1A',   // Nutcracker: the Christmas tree grows
+    'kRayVFD1Njk',   // Nutcracker: the mouse battle
+    'fTvqpSHSqh8',   // Nutcracker: a moment
+    'SwJKarHapr8',   // Nutcracker: Hans-Peter's mime
+    'hpHjMf7q7o4',   // Nutcracker: Hans-Peter's mime (another cast)
+    'LGfrEexvqYg',   // Nutcracker: cinema clip
+    '07iuzXMRzZA',   // Swan Lake: Odette's entrance
+    '077BgT3h6As',   // Swan Lake: Act II pas de deux
+    'cSGLGnHJDSQ',   // Swan Lake: the swans
+    'UWxtpBcYzao',   // Swan Lake: end of Act II
+    'BGcQ18MnQkc',   // Swan Lake: Neapolitan Dance
+    '3SKLSOGtayE',   // Swan Lake: Black Swan solo
+    'p21n1xorjEs',   // Swan Lake: Black Swan entrance and adage
+    'XfmSv0z205s',   // Swan Lake: Black Swan coda
+    'kJ4uowripdw',   // The Dying Swan
+    'ZSDkn77_OOc',   // Sleeping Beauty: Carabosse curses Aurora
+    't0eqzWD1HH8',   // Sleeping Beauty: Lilac Fairy
+    'qqejv_BQ7Zg',   // Sleeping Beauty: Rose Adage
+    'DOpl9nMptPg',   // Sleeping Beauty: Aurora's Act I variation
+    'Jfi2g_sFkqQ',   // Sleeping Beauty: Act II pas de deux
+    'BZe0TFU75rI',   // Sleeping Beauty: Bluebird and Princess Florine
+    'omIZgkAPsPU',   // Sleeping Beauty: White Cat and Puss-in-Boots
+    'NguzVDUANPQ',   // Sleeping Beauty: Prince Florimund
+    'nusHjVjugh4',   // Sleeping Beauty: wedding pas de deux
+    'doqAcLEirss',   // Cinderella: Act II pas de deux
+    'NLkTFhhw2So',   // Cinderella: the Fairy Godmother
+    '6F0lo3Izaog',   // Coppélia: the mechanical dolls
+    '7dYUHfcM-Sg',   // Coppélia: Act III pas de deux
+    'y_56m_iHRh8',   // Coppélia: Franz's variation
+    'Kq8zqhqjUIo',   // Alice's Adventures in Wonderland: Mad Hatter's Tea Party
+    'gOiK2G88sbw',   // Alice: the Caterpillar
+    'urN6ypzZnfo',   // Alice: Pig and Pepper
+    'e1BuBdGunC8',   // Alice: Knave of Hearts pas de deux
+    '25tor-1rYk4',   // Alice: Act II
+    'Mgn5pzV4HZI',   // La Fille mal gardée: the Maypole Dance
+    'BT9naCq0fdE',   // La Fille mal gardée: the Clog Dance
+    'H50e7FgcsQE',   // La Fille mal gardée: ribbon dance
+    'Fsjz3aLKZGw',   // La Fille mal gardée: Act I pas de deux
+    'ES4g495cp3M',   // La Fille mal gardée: adagio
+    'CmaxDQbA0C0',   // Don Quixote: Dance of the Matadors
+    '5fKxzQ8ARTQ',   // Don Quixote: Act I finale
+    '3iTBHVeUDgo',   // Don Quixote: Queen of the Dryads
+    'L2WOKBWOCiI',   // Don Quixote: Cupid
+    '9lpR7yQ66mc',   // Don Quixote: Kitri's variation
+    'xhjSXEv_APQ',   // Don Quixote: Act III pas de deux
+    'Ol6EtEJwAlc',   // The Dream: Titania and the fairies
+    'fy2tjWVcTEY',   // The Dream: Titania and Oberon
+    'RRMc4G8FLPg',   // Giselle: Dance of the Wilis
+    'bcTOC-OpS0E',   // Giselle: Myrtha, Queen of the Wilis
+    'GoG5izkLe-Y',   // Giselle: Act I variation
+    'eKRbJ8jvhKM',   // Giselle: Act I pas de deux
+    '8xjuwzb7Olg',   // Giselle: Act II pas de deux
+    'ql3o-1eSdbQ',   // Giselle: Act II pas de deux (another cast)
+    'sC6cu3BNZ-s',   // Romeo and Juliet: party pas de deux
+    'SyDo3h1Tu7c',   // Romeo and Juliet: Dance of the Knights
+    'FrJ8gxzkW2c',   // Romeo and Juliet: Juliet's variation
+    'O5vljmZRY4w',   // Romeo and Juliet: balcony pas de deux
+    '7zXfYygXX0I',   // Romeo and Juliet: balcony pas de deux (another cast)
+    'zWBVa2m_4Fs',   // Romeo and Juliet: balcony pas de deux (a third cast)
+    'g6MEm2IxyUE',   // Raymonda: Act III
+    'ojbsyz5h_0c',   // Raymonda: variation
+    'RB7sgUbI_uY',   // La Bayadère: Act II pas de deux
+    'We7KAkWJow8',   // Sylvia: Act III solo
+    'qdZuqWYIxiU',   // Jewels: 'Diamonds' pas de deux
+    '-rodEJzRXBs',   // Jewels: 'Diamonds' pas de deux (another cast)
+    'CQNx0oX6TEk',   // Jewels: 'Diamonds' corps de ballet
+    'DSOsjLYaA88',   // Jewels: 'Rubies' pas de deux
+    'wo9UWrKYFh8',   // Jewels: 'Emeralds' variation
+    // English National Ballet's Nutcracker
+    'SM6Emqyo6dY',   // Sugar Plum Fairy and Cavalier
+    'O1LP7QB0UFI',   // Liquorice Allsorts
+    'Gj_4ejZ-1Kk',   // Buttercream Roses
+    'xgns-ujBlW8',   // Butler and Maid
+    // Pacific Northwest Ballet's Nutcracker
+    'rZmZz6gIpE4',   // Waltz of the Snowflakes
+    'XHktscKh9WA',   // Marzipan
+    'UIb0g6iMQ5M'    // Flowers
+  ] },
   // free full movies from Air Bud Entertainment's own channel (the only ones from the list posted free by their owner)
   { name: 'Saturday Matinee', slate: 'dvd', ids: [
     '1VRVdf71dfo',   // Air Bud

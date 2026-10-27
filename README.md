@@ -81,6 +81,13 @@ bring a marshmallow shower. Each game starts with two choices and adds one after
 four), and drops one again after a tough question. Saying it again: the green speaker button. The red **TV**
 button goes back to the show where it left off.
 
+**Mr. Isaac**, the cow, hosts the games. He stands by the title on the menu and waves (tap him and he moos and
+says hi). While they play he shows up every 10 to 20 seconds or so, behind the cards so he never gets in the way of a tap:
+a little ballet to a music-box waltz, bouncing up from a trampoline below the screen, or peeking his head in from
+an edge. He also bounces along when they earn five stars. His head and body are traced from Josh's drawing
+(`isaac.js`, fetched the first time the games open); his arms, legs, tail, eyes and laughing mouth are drawn in
+`index.html` so they can move. He sits still if the device is set to reduce motion.
+
 Grown-ups can turn the games off in the settings; the button, the guide entry and the Yellow key go away.
 
 ## What's different from BSO TV

@@ -261,7 +261,7 @@ body.touch .hint{display:none}
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
 .games[hidden]{display:none}
 .games .confetti{opacity:.28}
-.gm-top{position:relative;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:2.6vmin 3.2vmin 0}
+.gm-top{position:relative;z-index:3;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:2.6vmin 3.2vmin 0}
 .gm-side{display:flex;align-items:center}
 .gm-btn{flex:0 0 auto;display:flex;align-items:center;justify-content:center;height:11vmin;min-width:11vmin;margin-right:2.2vmin;padding:0 3vmin;border:.6vmin solid var(--ink);border-radius:6vmin;
   box-shadow:.8vmin .8vmin 0 var(--ink);font-family:'Luckiest Guy','Arial Black',Impact,sans-serif;font-weight:400;font-size:4.6vmin;cursor:pointer}
@@ -275,10 +275,23 @@ body.touch .hint{display:none}
 .gm-stars path{fill:rgba(255,255,255,.22);stroke:var(--ink);stroke-width:6;stroke-linejoin:round;transition:fill .2s ease}
 .gm-stars .on path{fill:var(--yellow)}
 .gm-stars .on{animation:gmPop .45s cubic-bezier(.3,1.6,.5,1)}
-.gm-body{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;padding:0 3vmin 3vmin;overflow:hidden}
+.gm-body{position:relative;z-index:2;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;padding:0 3vmin 3vmin;overflow:hidden}
 .gm-menu,.gm-play{width:100%;margin:auto 0;display:flex;flex-direction:column;align-items:center}
 .gm-menu[hidden],.gm-play[hidden]{display:none}
-.gm-title{margin:0 0 5vmin;font-size:9vmin}
+.gm-title{margin:0;font-size:9vmin}
+/* Mr. Isaac: behind the cards and buttons, so taps always reach them; the empty space lets taps through to him */
+.gm-actor{position:absolute;top:0;right:0;bottom:0;left:0;z-index:1;overflow:hidden;pointer-events:none}
+.gm-top,.gm-side,.gm-body,.gm-menu,.gm-play,.gm-head,.gm-picks,.gm-prompt,.gm-target,.gm-choices{pointer-events:none}
+.gm-btn,.gm-pick,.gm-card,.gm-host{pointer-events:auto}
+.isaac{display:block;overflow:visible;pointer-events:none}
+.isaac .rig{pointer-events:visiblePainted}
+.gm-actor .isaac{position:absolute;left:0;top:0;will-change:transform}
+.gm-head{display:flex;align-items:center;justify-content:center;margin:0 0 4vmin}
+.gm-host{flex:0 0 auto;width:21vmin;height:33.7vmin;margin-right:3vmin;cursor:pointer}
+.gm-host .isaac{width:100%;height:100%;transform-origin:52% 99%;animation:isaacIdle 2.6s ease-in-out infinite}
+.gm-host.hop .isaac{animation:isaacHop .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes isaacIdle{50%{transform:translateY(-.8vmin) rotate(-1.5deg)}}
+@keyframes isaacHop{40%{transform:translateY(-5vmin) scale(1.04,.98)}100%{transform:none}}
 .gm-picks{display:flex;flex-wrap:wrap;justify-content:center}
 .gm-pick{width:24vmin;height:29vmin;margin:1.6vmin;padding:0;border:.7vmin solid var(--ink);border-radius:4vmin;box-shadow:1.2vmin 1.2vmin 0 var(--ink);
   display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;animation:gmIn .45s cubic-bezier(.3,1.5,.5,1) both}
@@ -342,6 +355,7 @@ body.gaming .mallow{z-index:12}
   .gm-top{flex-wrap:wrap}
   .gm-stars{position:static;order:3;flex:1 1 100%;justify-content:center;margin-top:2.4vmin;transform:none}
   .gm-pick{width:28vmin;height:32vmin;margin:1.4vmin}
+  .gm-host{width:18vmin;height:28.9vmin;margin-right:2vmin}
   .gm-target{height:35vmin}
   .gm-slot,.gm-glyph{width:35vmin;height:35vmin}
   .gm-glyph{font-size:27vmin}
@@ -369,6 +383,7 @@ body.gaming .mallow{z-index:12}
   #boot .w,#boot .confetti,.tune-in{animation:none;opacity:1}
   #boot .confetti{opacity:.5}
   .adbreak.on .ab-dots i{animation:none}
+  .gm-host .isaac{animation:none}
 }
 </style>
 </head>
@@ -439,6 +454,7 @@ body.gaming .mallow{z-index:12}
 
 <div class="games" id="games" hidden>
   <div class="confetti"></div>
+  <div class="gm-actor" id="gm-actor" aria-hidden="true"></div>
   <div class="gm-top">
     <div class="gm-side">
       <button class="gm-btn p-red" id="gm-tv" type="button" aria-label="Back to TV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l4 4 4-4"/><rect x="2.5" y="7" width="19" height="14" rx="3" fill="#fff" stroke="#1D1230"/></svg><span class="lbl">TV</span></button>
@@ -451,7 +467,10 @@ body.gaming .mallow{z-index:12}
   </div>
   <div class="gm-body">
     <div class="gm-menu" id="gm-menu">
-      <div class="logo gm-title" aria-label="Let's play!"><span class="w w1">Let's</span><span class="w w2">play!</span></div>
+      <div class="gm-head">
+        <div class="gm-host" id="gm-host" role="img" aria-label="Mr. Isaac"></div>
+        <div class="logo gm-title" aria-label="Let's play!"><span class="w w1">Let's</span><span class="w w2">play!</span></div>
+      </div>
       <div class="gm-picks" id="gm-picks"></div>
     </div>
     <div class="gm-play" id="gm-play" hidden>
@@ -1575,7 +1594,7 @@ window.smmTilt = tilt;   // for testing tilt without a phone
 // bring a marshmallow shower. No timers and nothing to lose. Each game gets harder (more to choose from)
 // after a few right answers in a row, and easier again if it's a struggle. The show pauses while they play.
 const gmEls = { root: $('games'), menu: $('gm-menu'), picks: $('gm-picks'), play: $('gm-play'), prompt: $('gm-prompt'), target: $('gm-target'),
-  choices: $('gm-choices'), stars: $('gm-stars'), tv: $('gm-tv'), home: $('gm-home'), say: $('gm-say'), btn: $('btn-games') };
+  choices: $('gm-choices'), stars: $('gm-stars'), tv: $('gm-tv'), home: $('gm-home'), say: $('gm-say'), btn: $('btn-games'), actor: $('gm-actor'), host: $('gm-host') };
 
 // The voice: the device's own text-to-speech. A new line cuts off the last one (and its follow-up), and if the
 // device never says it finished, a timer carries on, so a game can't get stuck waiting on it.
@@ -1640,6 +1659,59 @@ const Sfx = (() => {
     good() { play([72, 76, 79, 84].map((m, i) => [f(m), i * 0.08, 0.34, 'triangle', 0.14]).concat([[f(96), 0.32, 0.45, 'sine', 0.05]])); },
     oops() { play([[f(67), 0, 0.17, 'sine', 0.12, f(64)], [f(62), 0.18, 0.28, 'sine', 0.12, f(58)]]); },
     yay() { play([60, 64, 67, 72, 67, 72, 76, 79].map((m, i) => [f(m), i * 0.1, i === 7 ? 0.9 : 0.22, 'triangle', 0.13]).concat([[f(84), 0.7, 0.9, 'sine', 0.05]])); },
+    whistle(up) { play([[up ? 700 : 1500, 0, 0.32, 'sine', 0.07, up ? 1500 : 700]]); },   // Mr. Isaac peeking in, and ducking out
+    // a cartoon moo: a buzzy low note that opens up ("mm-ooo") and sags at the end
+    moo() {
+      try {
+        const c = Lofi.ctx;
+        if (!c) return;
+        if (c.state === 'suspended' && c.resume) c.resume();
+        const t = c.currentTime + 0.02, o = c.createOscillator(), lfo = c.createOscillator(), lg = c.createGain(), lp = c.createBiquadFilter(), g = c.createGain();
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(118, t); o.frequency.linearRampToValueAtTime(150, t + 0.22); o.frequency.linearRampToValueAtTime(128, t + 0.7); o.frequency.linearRampToValueAtTime(100, t + 1);
+        lfo.frequency.value = 5.5; lg.gain.value = 3; lfo.connect(lg); lg.connect(o.frequency);
+        lp.type = 'lowpass'; lp.Q.value = 5; lp.frequency.setValueAtTime(260, t); lp.frequency.linearRampToValueAtTime(950, t + 0.28); lp.frequency.linearRampToValueAtTime(520, t + 1);
+        g.gain.value = 0; g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.22, t + 0.09); g.gain.setValueAtTime(0.22, t + 0.75); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.05);
+        o.connect(lp); lp.connect(g); g.connect(c.destination);
+        o.start(t); lfo.start(t); o.stop(t + 1.1); lfo.stop(t + 1.1);
+      } catch (e) { /* no sound chip */ }
+    },
+    boing() {   // the trampoline
+      try {
+        const c = Lofi.ctx;
+        if (!c) return;
+        const t = c.currentTime + 0.02, o = c.createOscillator(), lfo = c.createOscillator(), lg = c.createGain(), g = c.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(520, t + 0.25);
+        lfo.frequency.value = 16; lg.gain.value = 28; lfo.connect(lg); lg.connect(o.frequency);
+        g.gain.value = 0; g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.14, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+        o.connect(g); g.connect(c.destination); o.start(t); lfo.start(t); o.stop(t + 0.5); lfo.stop(t + 0.5);
+      } catch (e) { /* no sound chip */ }
+    },
+    // a little music-box waltz (an original tune) for Mr. Isaac's ballet: six bars, about five seconds
+    musicBox() {
+      const none = { stop() {} };
+      try {
+        const c = Lofi.ctx;
+        if (!c) return none;
+        if (c.state === 'suspended' && c.resume) c.resume();
+        const m = c.createGain(); m.gain.value = 1; m.connect(c.destination);
+        const t0 = c.currentTime + 0.05, beat = 0.3;
+        const bell = (midi, at, vol, len) => {
+          [[1, vol], [2.76, vol * 0.18]].forEach((h) => {
+            const o = c.createOscillator(), g = c.createGain(), t = t0 + at;
+            o.type = 'sine'; o.frequency.value = f(midi) * h[0];
+            g.gain.value = 0; g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(h[1], t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + (h[0] > 1 ? len * 0.3 : len));
+            o.connect(g); g.connect(m); o.start(t); o.stop(t + len + 0.05);
+          });
+        };
+        const TUNE = [[88, 1], [91, 1], [96, 1], [95, 2], [91, 1], [93, 1], [89, 1], [93, 1], [91, 2], [88, 1], [89, 1], [86, 1], [83, 1], [84, 3]];
+        let at = 0;
+        TUNE.forEach((n) => { bell(n[0], at * beat, 0.09, n[1] * beat + 0.5); at += n[1]; });
+        const BASS = [[60, 64, 67], [55, 59, 62], [53, 57, 60], [60, 64, 67], [55, 59, 62], [60, 64, 67]];
+        BASS.forEach((ch, b) => { bell(ch[0], b * 3 * beat, 0.06, 0.8); bell(ch[1], (b * 3 + 1) * beat, 0.03, 0.4); bell(ch[2], (b * 3 + 1) * beat, 0.03, 0.4); bell(ch[1], (b * 3 + 2) * beat, 0.03, 0.4); bell(ch[2], (b * 3 + 2) * beat, 0.03, 0.4); });
+        return { stop() { try { m.gain.setTargetAtTime(0, c.currentTime, 0.05); } catch (e) { /* closed */ } } };
+      } catch (e) { return none; }
+    },
   };
 })();
 
@@ -1785,7 +1857,252 @@ function gmScore(key, misses) {
   store.set('gmlv', gm.lv);
 }
 
+/* ---------- Mr. Isaac ---------- */
+// Mr. Isaac hosts the game room. He stands by the title on the menu and waves, and while they play he comes
+// out every so often: a little ballet, bouncing up from a trampoline below the screen, or peeking in from an
+// edge. He moves behind the cards, so he never gets in the way of a tap. Tap him and he moos.
+// He's a puppet: head and body traced from Josh's drawing, in isaac.js (fetched the first time the games
+// open); his arms, legs, tail, eyes and laughing mouth are drawn here so they can move.
+// Mr. Isaac as a puppet: his head and body are traced from Josh's drawing (isaac.js); his arms, legs, tail,
+// eyes and open mouth are drawn here so they can move. Same coordinates as the drawing (430 x 690, feet at 684).
+const IK = '#251A2B';      // the drawing's own ink
+function isaacSvg(cls) {
+  const A = window.SMM_ISAAC || { art: '', outline: '' };
+  const S = 'stroke="' + IK + '" stroke-linejoin="round" stroke-linecap="round"';
+  const arm = (c) => '<g class="' + c + '"><path d="M-19 -8C-19 -27 19 -27 19 -8C20 20 17 44 15 64L-15 64C-17 44 -20 20 -19 -8Z" fill="#fff" ' + S + ' stroke-width="5.5"/>'
+    + '<path d="M8 -4C10 20 9 44 8 60L13 60C15 44 16 20 15 -4Z" fill="#E3D8D0"/>'
+    + '<path d="M-16.5 60L16.5 60L16 82Q16 93 4 93L-4 93Q-16 93 -16 82Z" fill="#694D42" ' + S + ' stroke-width="5.5"/><path d="M-2 70V92" fill="none" ' + S + ' stroke-width="4"/></g>';
+  return '<svg class="' + cls + '" viewBox="0 0 430 690" aria-hidden="true" focusable="false"><g class="rig">'
+    // tail, legs: behind the body
+    + '<g class="i-tail"><path d="M334 520C358 512 378 496 388 472" fill="none" stroke="' + IK + '" stroke-width="13" stroke-linecap="round"/>'
+    + '<path d="M334 520C358 512 378 496 388 472" fill="none" stroke="#fff" stroke-width="5.5" stroke-linecap="round"/>'
+    + '<path d="M388 476C366 474 360 446 373 430C377 424 381 419 383 412C387 419 389 424 391 427C394 419 396 411 395 403C410 414 418 433 414 453C411 467 401 477 388 476Z" fill="#8B5539" ' + S + ' stroke-width="5"/></g>'
+    + '<g class="i-legL"><path d="M120 516L121 560L138 647L197 647L200 590L201 516Z" fill="#fff"/><path d="M176 596L199 596L197 645L180 645Z" fill="#E3D8D0"/>'
+    + '<path d="M121 540L121 560L138 647M197 647L200 590L201 540" fill="none" ' + S + ' stroke-width="5.5"/>'
+    + '<path d="M129 591L157 607L137 628Z" fill="#41A69E" ' + S + ' stroke-width="4.5"/>'
+    + '<path d="M135 645L199 645L198 676Q198 683 191 683L143 683Q136 683 136 676Z" fill="#694D42" ' + S + ' stroke-width="5.5"/><path d="M153 652V682" fill="none" ' + S + ' stroke-width="4"/></g>'
+    + '<g class="i-legR"><path d="M236 516L236 566L260 648L311 648L322 553L324 516Z" fill="#fff"/><path d="M300 560L322 556L311 646L298 646Z" fill="#E3D8D0"/>'
+    + '<path d="M236 540L236 566L260 648M311 648L322 553L323 540" fill="none" ' + S + ' stroke-width="5.5"/>'
+    + '<path d="M286 576L312 601L291 624L266 600Z" fill="#F1882D" ' + S + ' stroke-width="4.5"/>'
+    + '<path d="M256 646L312 646L311 677Q311 684 304 684L264 684Q257 684 257 677Z" fill="#694D42" ' + S + ' stroke-width="5.5"/><path d="M283 653V683" fill="none" ' + S + ' stroke-width="4"/></g>'
+    // head and body, traced; his side's outline; the pink triangle (its old spot was under the card's arm)
+    + A.art
+    + '<path d="' + A.outline + '" fill="none" ' + S + ' stroke-width="5.5"/>'
+    + '<path d="M241 401L282 405L262 437Z" fill="#E75B8C" ' + S + ' stroke-width="4.5"/>'
+    + arm('i-armL') + arm('i-armR')
+    // eyes that blink and look around, and a laughing mouth that covers the smile when it's open
+    + '<g class="i-eyeL"><ellipse cx="125" cy="147" rx="19.5" ry="23.5" fill="#fff" ' + S + ' stroke-width="5"/><g class="i-pupil"><ellipse cx="128.5" cy="150.4" rx="12.5" ry="15.5" fill="' + IK + '"/><circle cx="135.3" cy="143.6" r="4.2" fill="#fff"/></g></g>'
+    + '<g class="i-eyeR"><ellipse cx="230.5" cy="156" rx="22" ry="24.5" fill="#fff" ' + S + ' stroke-width="5"/><g class="i-pupil"><ellipse cx="233.7" cy="160.3" rx="14" ry="16.5" fill="' + IK + '"/><circle cx="240.9" cy="153.6" r="4.4" fill="#fff"/></g></g>'
+    + '<path class="i-happyL" d="M106 154Q125 132 144 154" fill="none" ' + S + ' stroke-width="5.5" style="display:none"/>'
+    + '<path class="i-happyR" d="M209 163Q230.5 140 252 163" fill="none" ' + S + ' stroke-width="5.5" style="display:none"/>'
+    + '<g class="i-laugh" style="display:none"><path d="M126 247Q170 249 216 232Q213 291 170 294Q131 292 126 247Z" fill="#5B2333" ' + S + ' stroke-width="5"/>'
+    + '<path d="M146 283Q171 268 197 280Q187 293 170 294Q154 293 146 283Z" fill="#E8697A"/></g>'
+    + '</g></svg>';
+}
+// Put him in a pose. Arms and legs: 0 = hanging down, positive = lifted out to his side (about 150 = up in a V).
+// look / lookY move his pupils (-1 to 1); blink 0 to 1; happy = smiling closed eyes; wink = the left one only;
+// oh = laughing open mouth.
+function isaacPose(el, p) {
+  const q = (s) => el.querySelector(s);
+  if (!el._parts) el._parts = { armL: q('.i-armL'), armR: q('.i-armR'), legL: q('.i-legL'), legR: q('.i-legR'), tail: q('.i-tail'),
+    eyeL: q('.i-eyeL'), eyeR: q('.i-eyeR'), happyL: q('.i-happyL'), happyR: q('.i-happyR'), laugh: q('.i-laugh'), pupils: el.querySelectorAll('.i-pupil') };
+  const P = el._parts, f = (n) => (n || 0).toFixed(2);
+  P.armL.setAttribute('transform', 'translate(112 372) rotate(' + f(14 + (p.armL || 0)) + ')');
+  P.armR.setAttribute('transform', 'translate(322 372) rotate(' + f(-14 - (p.armR || 0)) + ')');
+  P.legL.setAttribute('transform', 'rotate(' + f(p.legL) + ' 160 562)');
+  P.legR.setAttribute('transform', 'rotate(' + f(-(p.legR || 0)) + ' 280 560)');
+  P.tail.setAttribute('transform', 'rotate(' + f(p.tail) + ' 340 516)');
+  const b = Math.max(0.06, 1 - (p.blink || 0));
+  const happyL = !!(p.happy || p.wink), happyR = !!p.happy;
+  P.eyeL.style.display = happyL ? 'none' : ''; P.happyL.style.display = happyL ? '' : 'none';
+  P.eyeR.style.display = happyR ? 'none' : ''; P.happyR.style.display = happyR ? '' : 'none';
+  P.eyeL.setAttribute('transform', 'translate(0 ' + (147 * (1 - b)).toFixed(2) + ') scale(1 ' + b.toFixed(3) + ')');
+  P.eyeR.setAttribute('transform', 'translate(0 ' + (156 * (1 - b)).toFixed(2) + ') scale(1 ' + b.toFixed(3) + ')');
+  const lx = (p.look || 0) * 5, ly = (p.lookY || 0) * 5;
+  for (let i = 0; i < P.pupils.length; i++) P.pupils[i].setAttribute('transform', 'translate(' + lx.toFixed(2) + ' ' + ly.toFixed(2) + ')');
+  P.laugh.style.display = p.oh ? '' : 'none';
+}
+const REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+const Isaac = { el: null, host: null, act: null, raf: 0, next: 0, react: 0, last: '', music: null, hostRaf: 0, hostBlink: 0 };
+const ease = (k) => (k <= 0 ? 0 : k >= 1 ? 1 : k * k * (3 - 2 * k));
+const seg = (t, a, b) => ease((t - a) / (b - a));
+const lerp = (a, b, k) => a + (b - a) * k;
+// a waddling walk: legs and arms swinging, a bob and a sway; feet are px above the floor
+function isaacWalk(t, dir, u) {
+  const ph = t / 210 * Math.PI, s = Math.sin(ph);
+  return { legL: 12 * s, legR: -12 * s, armL: 8 - 16 * s, armR: 8 + 16 * s, feet: Math.abs(Math.cos(ph)) * 1.2 * u, rot: 4 * s, look: dir, tail: 18 * Math.sin(ph / 2) };
+}
+// Each act gives its length, the point he turns about (fractions of his box) and his pose at time t:
+// x, y = where that point is on the screen, plus rot, sx/sy (spin and squash) and the joint angles.
+const ISAAC_ACTS = {
+  ballet(W, H, w, h, u) {
+    const dir = Math.random() < 0.5 ? 1 : -1, x0 = dir > 0 ? -w * 0.6 : W + w * 0.6, spot = dir > 0 ? W * 0.17 : W * 0.83;
+    return { dur: 9800, origin: [0.52, 0.991], music: 2200, pose(t) {
+      let p;
+      if (t < 2200) { p = isaacWalk(t, dir, u); p.x = lerp(x0, spot, t / 2200); }
+      else if (t > 7600) { p = isaacWalk(t, -dir, u); p.x = lerp(spot, x0, (t - 7600) / 2200); }
+      else {
+        const up = seg(t, 2200, 2700) * (1 - seg(t, 6600, 7000));          // arms up in a V for the dance
+        p = { x: spot, armL: 140 * up, armR: 140 * up, look: 0, tail: 20 * Math.sin(t / 160), oh: up > 0.5 && t < 2900 };
+        p.feet = 2.5 * u * up; p.sy = 1 + 0.03 * up;                       // up on his toes
+        if (t > 2800 && t < 4200) { const k = seg(t, 2800, 4200); p.sx = Math.cos(k * Math.PI * 4); p.happy = true; }   // two twirls, eyes shut, smiling
+        const r = seg(t, 4200, 4500) * (1 - seg(t, 4800, 5100)), l = seg(t, 5000, 5300) * (1 - seg(t, 5600, 5900));
+        p.legR = 70 * r; p.legL = 70 * l;                                  // a leg out to each side
+        p.armR = lerp(p.armR, 85, r); p.armL = lerp(p.armL, 85, l);
+        p.rot = -8 * r + 8 * l; p.look = r - l;
+        if (t > 5900 && t < 6700) {                                        // bend, then a leap
+          const k = (t - 5900) / 800, bend = Math.sin(Math.min(1, k / 0.45) * Math.PI);
+          if (k < 0.45) { p.sy = 1 - 0.1 * bend; p.feet = 0; p.legL = p.legR = 10 * bend; }
+          else { const j = (k - 0.45) / 0.55; p.feet = 18 * u * 4 * j * (1 - j); p.legL = p.legR = 35 * Math.sin(j * Math.PI); p.oh = true; }
+        }
+        const bow = seg(t, 6700, 7000) * (1 - seg(t, 7300, 7600));         // and a bow
+        if (bow) { p.armR = lerp(p.armR, -25, bow); p.armL = lerp(p.armL, 60, bow); p.sy = 1 - 0.06 * bow; p.rot = 4 * bow; p.wink = bow > 0.5; }
+      }
+      p.y = H - (p.feet || 0);
+      return p;
+    } };
+  },
+  trampoline(W, H, w, h, u) {
+    const x = Math.random() < 0.5 ? W * (0.12 + Math.random() * 0.14) : W * (0.74 + Math.random() * 0.14), hop = 1150, low = H + h * 0.5;
+    return { dur: hop * 3, origin: [0.5, 0.55], bounces: 3, hop: hop, pose(t) {
+      const i = Math.min(2, Math.floor(t / hop)), k = (t - i * hop) / hop, top = H * (0.5 - 0.06 * i);
+      const air = Math.sin(k * Math.PI);
+      return { x: x, y: lerp(low, top, 4 * k * (1 - k)), rot: i === 1 ? 360 * ease(k) * (x < W / 2 ? 1 : -1) : 5 * Math.sin(k * Math.PI * 2),
+        armL: 140 * air, armR: 140 * air, legL: 28 * air, legR: 28 * air, lookY: k < 0.5 ? -1 : 1, oh: air > 0.6, happy: air > 0.9, tail: 30 * air };
+    } };
+  },
+  peek(W, H, w, h, u) {
+    const r = Math.random(), side = r < 0.4 ? 'left' : r < 0.8 ? 'right' : 'top', twice = Math.random() < 0.35;
+    const out = h * 0.33, inn = h * 0.15;   // head centre: hidden, and peeking in
+    let pos;
+    if (side === 'left') pos = (k) => ({ x: lerp(-out, inn, k), y: H * 0.34, rot: 75 });
+    else if (side === 'right') pos = (k) => ({ x: lerp(W + out, W - inn, k), y: H * 0.34, rot: -75 });
+    else { const x = Math.random() < 0.5 ? W * 0.27 : W * 0.73; pos = (k) => ({ x: x, y: lerp(-out, inn, k), rot: 180 }); }   // hanging down from the top, between the buttons
+    const start = twice ? 900 : 0;
+    return { dur: start + 3000, origin: [0.477, 0.232], peeks: twice ? [0, start] : [0], pose(t) {
+      let k;
+      if (twice && t < 900) k = seg(t, 0, 280) * (1 - seg(t, 300, 520));  // a quick look, gone, then back for a good look
+      else k = seg(t, start, start + 380) * (1 - seg(t, start + 2600, start + 2950));
+      const p = pos(k), hold = t - start;
+      p.rot += 7 * Math.sin(hold / 300) * k;
+      p.lookY = -1; p.look = 0.8 * Math.sin(hold / 420);
+      p.oh = twice && hold > 0 && hold < 900;                              // caught you!
+      p.blink = hold > 1500 && hold < 1640 ? Math.sin((hold - 1500) / 140 * Math.PI) : 0;
+      p.wink = hold > 2100 && hold < 2500;
+      p.armL = p.armR = 30;
+      return p;
+    } };
+  },
+};
+function isaacBuild() {
+  if (Isaac.el) return;
+  if (!window.SMM_ISAAC) {                     // his drawing isn't here yet: fetch it, then set him up
+    if (!Isaac.loading) {
+      Isaac.loading = true;
+      const sc = document.createElement('script');
+      sc.src = 'isaac.js?v=1';
+      sc.onload = () => { Isaac.loading = false; isaacBuild(); if (gm.open && gm.screen === 'menu') hostWave(1800); };
+      sc.onerror = () => { Isaac.loading = false; };
+      document.head.appendChild(sc);
+    }
+    return;
+  }
+  gmEls.actor.innerHTML = isaacSvg('isaac');
+  Isaac.el = gmEls.actor.firstChild;
+  Isaac.el.style.display = 'none';
+  Isaac.el.addEventListener('pointerdown', (e) => { e.stopPropagation(); if (Isaac.act) { Isaac.react = performance.now(); Sfx.moo(); } });
+  gmEls.host.innerHTML = isaacSvg('isaac');
+  Isaac.host = gmEls.host.firstChild;
+  isaacPose(Isaac.host, {});
+  gmEls.host.addEventListener('click', (e) => {
+    e.stopPropagation();
+    Sfx.moo();
+    gmEls.host.classList.remove('hop'); void gmEls.host.offsetWidth; gmEls.host.classList.add('hop');
+    hostWave(1400, true);
+    Voice.say('Moo! Hi! I\'m Mister Isaac!');
+  });
+}
+function isaacPlay(name) {
+  if (!gm.open || Isaac.act || REDUCED || !Isaac.el) return false;
+  const W = gmEls.root.clientWidth, H = gmEls.root.clientHeight, u = Math.min(W, H) / 100;
+  const w = 30 * u, h = w * 690 / 430, a = ISAAC_ACTS[name](W, H, w, h, u);
+  a.name = name; a.W = W; a.H = H; a.w = w; a.h = h; a.u = u; a.t0 = performance.now(); a.done = {};
+  Isaac.act = a; Isaac.last = name; Isaac.react = 0;
+  Isaac.el.style.width = w + 'px'; Isaac.el.style.height = h + 'px';
+  Isaac.el.style.transformOrigin = (a.origin[0] * 100) + '% ' + (a.origin[1] * 100) + '%';
+  Isaac.el.style.display = 'block';
+  if (!Isaac.raf) Isaac.raf = requestAnimationFrame(isaacStep);
+  dbg('Mr. Isaac: ' + name);
+  return true;
+}
+function isaacStep(now) {
+  Isaac.raf = 0;
+  const a = Isaac.act;
+  if (!a) return;
+  const t = now - a.t0;
+  if (t >= a.dur || !gm.open) { isaacStop(); isaacQueue(); return; }
+  // the sounds that go with each act, once each
+  if (a.music != null && t >= a.music && !a.done.music) { a.done.music = 1; Isaac.music = Sfx.musicBox(); }
+  if (a.bounces) { const i = Math.floor(t / a.hop); if (i < a.bounces && !a.done['b' + i]) { a.done['b' + i] = 1; Sfx.boing(); } }
+  if (a.peeks) a.peeks.forEach((s, i) => { if (t >= s && !a.done['p' + i]) { a.done['p' + i] = 1; Sfx.whistle(true); } });
+  if (a.peeks && t >= a.dur - 420 && !a.done.out) { a.done.out = 1; Sfx.whistle(false); }
+  const p = a.pose(t);
+  if (p.blink == null) { const bt = t % 3100; p.blink = bt < 140 ? Math.sin(bt / 140 * Math.PI) : 0; }
+  let bump = 0;
+  if (Isaac.react) {                                   // tapped: a happy hop and an "oh!"
+    const r = (now - Isaac.react) / 450;
+    if (r >= 1) Isaac.react = 0; else { bump = Math.sin(r * Math.PI) * a.u * 6; p.oh = true; p.happy = true; }
+  }
+  const rad = (p.rot || 0) * Math.PI / 180;
+  const x = p.x - a.origin[0] * a.w + Math.sin(rad) * bump, y = p.y - a.origin[1] * a.h - Math.cos(rad) * bump;
+  Isaac.el.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) rotate(' + (p.rot || 0).toFixed(2) + 'deg) scale(' + (p.sx == null ? 1 : p.sx).toFixed(3) + ',' + (p.sy || 1).toFixed(3) + ')';
+  isaacPose(Isaac.el, p);
+  Isaac.raf = requestAnimationFrame(isaacStep);
+}
+function isaacStop() {
+  Isaac.act = null;
+  cancelAnimationFrame(Isaac.raf); Isaac.raf = 0;
+  if (Isaac.el) Isaac.el.style.display = 'none';
+  if (Isaac.music) { Isaac.music.stop(); Isaac.music = null; }
+}
+// While they play, Mr. Isaac comes out every 10 to 22 seconds or so, never the same act twice running.
+function isaacQueue(soon) {
+  clearTimeout(Isaac.next);
+  if (!gm.open || REDUCED) return;
+  Isaac.next = setTimeout(() => {
+    if (!gm.open || gm.screen !== 'play') return;
+    const pick = () => { const r = Math.random(); return r < 0.4 ? 'peek' : r < 0.7 ? 'ballet' : 'trampoline'; };
+    let name = pick();
+    if (name === Isaac.last) name = pick();
+    if (!isaacPlay(name)) isaacQueue();
+  }, soon ? 6000 + Math.random() * 5000 : 10000 + Math.random() * 12000);
+}
+// The host on the menu: a wave hello, and a blink now and then.
+function hostWave(ms, oh) {
+  if (!Isaac.host || REDUCED) return;
+  cancelAnimationFrame(Isaac.hostRaf);
+  const t0 = performance.now();
+  const step = (now) => {
+    const t = now - t0;
+    if (t >= ms || !gm.open) { isaacPose(Isaac.host, {}); Isaac.hostRaf = 0; return; }
+    const up = seg(t, 0, 250) * (1 - seg(t, ms - 300, ms));
+    isaacPose(Isaac.host, { armR: (130 + 22 * Math.sin(t / 110)) * up, look: -0.6 * up, oh: oh && t < 900, happy: oh && t < 900, tail: 20 * Math.sin(t / 150) });
+    Isaac.hostRaf = requestAnimationFrame(step);
+  };
+  Isaac.hostRaf = requestAnimationFrame(step);
+}
+function hostBlinks(on) {
+  clearInterval(Isaac.hostBlink);
+  if (!on || !Isaac.host) return;
+  Isaac.hostBlink = setInterval(() => {
+    if (!gm.open || gm.screen !== 'menu' || Isaac.hostRaf) return;
+    isaacPose(Isaac.host, { blink: 1 });
+    setTimeout(() => { if (!Isaac.hostRaf) isaacPose(Isaac.host, {}); }, 140);
+  }, 3400);
+}
+
 function gmBuild() {
+  isaacBuild();
   GAMES.forEach((g, i) => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'gm-pick p-' + g.paint; b.setAttribute('aria-label', g.name);
@@ -1824,6 +2141,7 @@ function closeGames() {
   if (!gm.open) return;
   gm.open = false; gm.round = null; gm.game = null;
   clearTimeout(gm.idleT); Voice.stop();
+  isaacStop(); clearTimeout(Isaac.next); hostBlinks(false); cancelAnimationFrame(Isaac.hostRaf); Isaac.hostRaf = 0;
   gmEls.root.hidden = true; document.body.classList.remove('gaming');
   if (gm.wasPlaying && player && player.playVideo) {
     try { player.playVideo(); } catch (e) { /* the player isn't ready */ }
@@ -1844,6 +2162,8 @@ function gmMenu() {
   gmEls.menu.hidden = false; gmEls.play.hidden = true; gmEls.home.hidden = true;
   [].forEach.call(gmEls.picks.children, (b) => { b.style.animation = 'none'; void b.offsetWidth; b.style.animation = ''; });   // the tiles bounce in again
   gm.row = 1; gm.col = 0; gmCursor();
+  isaacStop(); clearTimeout(Isaac.next);
+  hostWave(1800); hostBlinks(true);
   Voice.say('Let\'s play! Pick a game.');
 }
 function gmStart(g) {
@@ -1852,6 +2172,8 @@ function gmStart(g) {
   gmEls.menu.hidden = true; gmEls.play.hidden = false; gmEls.home.hidden = false;
   gmEls.prompt.textContent = ''; gmEls.target.innerHTML = ''; gmEls.choices.innerHTML = '';
   gm.row = 1; gm.col = 0; gmCursor();
+  hostBlinks(false);
+  isaacQueue(true);
   Voice.say(g.name + '!', () => { if (gm.game === g && !gm.round) gmRound(); });
 }
 function gmRound() {
@@ -1935,6 +2257,7 @@ function gmAfter() {
   if (gm.stars < 5) { gmRound(); return; }
   const r = gm.round;
   Sfx.yay(); dropMallows(); setTimeout(dropMallows, 700);
+  isaacPlay('trampoline');                    // Mr. Isaac bounces along
   const s = document.createElement('div');
   s.className = 'gm-super'; s.textContent = 'Superstar!';
   gmEls.root.appendChild(s);
@@ -2011,7 +2334,7 @@ gmEls.say.addEventListener('click', (e) => { e.stopPropagation(); gmReplay(); })
 gmEls.root.addEventListener('pointerdown', () => { if (gm.keys) { gm.keys = false; gmCursor(); } });
 gmEls.root.addEventListener('contextmenu', (e) => e.preventDefault());
 gmShowButton();
-window.smmGames = { open: openGames, close: closeGames, state: gm };   // for testing
+window.smmGames = { open: openGames, close: closeGames, state: gm, isaac: isaacPlay, isaacState: Isaac };   // for testing
 
 renderGuide();
 const s = document.createElement('script');

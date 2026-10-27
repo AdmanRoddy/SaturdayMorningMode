@@ -801,7 +801,7 @@ function adBreak(on, now) {
     if (gm.open) { try { player.pauseVideo(); } catch (e) { /* the ad may not pause */ } }
     // something is playing, so Safari isn't waiting for a tap: every tap goes to the app (and the banner)
     if (document.body.classList.contains('tapyt')) { document.body.classList.remove('tapyt'); document.body.classList.remove('tapgo'); unlocked = true; }
-    adFailsafe = setTimeout(() => { dbg('cover up 90 s: taking it down'); adBreak(false, true); }, 90000);   // never leave the slate stuck up
+    adWatch(Date.now(), 90000, -1);   // never leave the slate stuck up
   } else {
     if (prog && prog.token === token && !prog.seeked) els.stat.classList.add('on');   // show starts behind the tuning screen
     els.ad.classList.remove('on'); dvdSlate(false);
@@ -809,6 +809,21 @@ function adBreak(on, now) {
     hushAd(false);
     if (IOS && prog && prog.token === token) checkStarted(4000);
   }
+}
+// Some ads run two or three minutes. Past 90 s the slate stays up only while an ad is clearly still going (the
+// show hasn't started and the clock is still moving), checking again every 20 s, and never past 5 minutes.
+function adWatch(since, ms, lastT) {
+  clearTimeout(adFailsafe);
+  adFailsafe = setTimeout(() => {
+    if (!adOn) return;
+    let st = null, t = -1;
+    try { st = player.getPlayerState(); t = player.getCurrentTime(); } catch (e) { /* player gone */ }
+    const going = st !== YT.PlayerState.PLAYING && st !== YT.PlayerState.PAUSED && st !== YT.PlayerState.ENDED && t > 0 && t !== lastT;
+    const up = Math.round((Date.now() - since) / 1000);
+    if (going && up < 300) { dbg('ad still going at ' + up + ' s: cover stays'); adWatch(since, 20000, t); return; }
+    dbg('cover up ' + up + ' s: taking it down');
+    adBreak(false, true);
+  }, ms);
 }
 // Mute the ad. YouTube's ad player can come up with its own sound on, so the mute is repeated while the ad
 // runs. (iPads don't let a page silence another site's video at all; there the music plays alongside.)

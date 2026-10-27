@@ -100,4 +100,5 @@ YouTube still runs its ads inside the player (a page can't block them). Saturday
 its own screen, mutes them where the device allows it, and plays its own lofi tune over the break: original
 music generated live by the device, so there's nothing to license or download. iPads don't let a page mute
 another site's video, so there the ad's sound can still come through under the music. Signing in to YouTube
-Premium is the only way to get rid of the ads themselves.
+Premium is the only way to get rid of the ads themselves. Long ads (some run two or three minutes) stay covered
+until they finish, up to five minutes.
